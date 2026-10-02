@@ -11,7 +11,7 @@
   --bg-card: #ffffff;
   --primary: #0f3d26;
   --primary-light: #e6f0eb;
-  --accent: #d4af37; /* Dorado institucional */
+  --accent: #d4af37;
   --text-main: #111827;
   --text-sec: #6b7280;
   --border: #e5e7eb;
@@ -23,59 +23,57 @@
 html, body {height: 100%; margin: 0; padding: 0; background: transparent; font-family: 'Inter', sans-serif;}
 body {display: flex; justify-content: center;}
 
-/* Contenedor Principal */
 .app-container {width: 100%; max-width: 420px; height: 100%; background: var(--bg-app); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 0 25px rgba(0,0,0,0.08); position: relative;}
 
-/* Header */
 .header {flex-shrink: 0; background: #fff; padding: 20px 20px 15px; text-align: center; position: relative; z-index: 10; border-bottom: 1px solid var(--border);}
 .logo {display: block; margin: 0 auto; width: 160px; max-width: 60%; height: auto;}
 .status-badge {position: absolute; top: 22px; right: 20px; font-size: 0.65rem; background: var(--primary-light); color: var(--primary); padding: 5px 10px; border-radius: 12px; font-weight: 700; letter-spacing: 0.5px;}
 
-/* Estructura de Vistas */
 .tab-content {flex: 1; overflow-y: auto; padding-bottom: 30px; display: none; background: var(--bg-app);}
 .tab-content.active {display: block;}
 .section-title {padding: 0 20px; font-size: 0.8rem; font-weight: 700; color: var(--text-sec); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; margin-top: 15px;}
 
-/* Componente: Toggle Switch (Acciones vs Cripto) */
-.market-toggle {display: flex; background: #e5e7eb; border-radius: 12px; margin: 15px 20px; padding: 4px; position: relative;}
-.toggle-btn {flex: 1; text-align: center; padding: 10px 0; font-size: 0.85rem; font-weight: 600; color: var(--text-sec); cursor: pointer; border-radius: 8px; transition: all 0.3s ease; z-index: 2;}
-.toggle-btn.active {color: var(--primary); background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.05);}
+/* Buscador Principal */
+.search-container {padding: 15px 20px 5px;}
+.search-bar {width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--border); background: #fff; font-size: 0.9rem; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s;}
+.search-bar:focus {border-color: var(--primary);}
 
-/* Listas de Activos */
-.asset-list {padding: 0 20px;}
-.asset-card {background: var(--bg-card); border-radius: 14px; border: 1px solid var(--border); margin-bottom: 12px; padding: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
+/* Tarjetas Desplegables de Activos */
+.asset-list {padding: 10px 20px;}
+.asset-card {background: var(--bg-card); border-radius: 14px; border: 1px solid var(--border); margin-bottom: 12px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: all 0.3s ease;}
+.asset-header {padding: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;}
 .asset-left {display: flex; gap: 12px; align-items: center;}
 .asset-icon {width: 40px; height: 40px; border-radius: 10px; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; font-weight: bold;}
 .icon-stock {background: var(--primary-light); color: var(--primary);}
 .icon-crypto {background: #fef08a; color: #854d0e;}
 .asset-name {font-weight: 700; font-size: 1rem; color: var(--text-main); margin-bottom: 2px;}
-.asset-metrics {font-size: 0.7rem; color: var(--text-sec); font-weight: 500;}
-.asset-metrics span {margin-right: 8px;}
 .asset-right {text-align: right;}
 .asset-price {font-weight: 800; font-size: 1.05rem; color: var(--text-main);}
-.asset-change {font-size: 0.8rem; font-weight: 600; margin-top: 2px; display: flex; align-items: center; justify-content: flex-end; gap: 4px;}
+.asset-change {font-size: 0.8rem; font-weight: 600; margin-top: 2px; display: flex; justify-content: flex-end; align-items: center;}
 .up {color: var(--green);}
 .down {color: var(--red);}
 
-/* Componente: Feed de Alertas IA */
+/* Detalle Desplegable (Técnico / Fundamental) */
+.asset-details {display: none; padding: 0 16px 16px; border-top: 1px dashed var(--border); background: #fafafa;}
+.asset-card.expanded .asset-details {display: block;}
+.detail-tabs {display: flex; gap: 8px; margin: 12px 0;}
+.btn-tab {flex: 1; padding: 8px; font-size: 0.75rem; font-weight: 700; border-radius: 8px; border: 1px solid var(--border); background: #fff; color: var(--text-sec); cursor: pointer;}
+.btn-tab.active-tech {background: var(--blue-light); color: var(--blue); border-color: #bfdbfe;}
+.btn-tab.active-fund {background: #fffbeb; color: #b45309; border-color: #fde68a;}
+.data-grid {display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;}
+.data-box {background: #fff; padding: 10px; border-radius: 8px; border: 1px solid var(--border);}
+.data-label {font-size: 0.65rem; color: var(--text-sec); text-transform: uppercase; font-weight: 700; margin-bottom: 4px;}
+.data-val {font-size: 0.9rem; font-weight: 700; color: var(--text-main);}
+.val-bull {color: var(--green);}
+.val-bear {color: var(--red);}
+
+/* Historial de Alertas */
 .feed {padding: 10px 20px;}
-.alert-card {background: var(--bg-card); border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); box-shadow: 0 4px 10px rgba(0,0,0,0.03); border-top: 4px solid var(--primary);}
-.alert-card.crypto-alert {border-top-color: var(--accent);}
-.card-header {display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px;}
-.ticker {font-size: 1.15rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 6px;}
-.ticker-type {font-size: 0.65rem; padding: 3px 6px; border-radius: 4px; font-weight: 700; text-transform: uppercase; background: #f3f4f6; color: var(--text-sec);}
-.time {font-size: 0.75rem; color: var(--text-sec); font-weight: 500;}
-.insight {font-size: 0.9rem; color: var(--text-sec); line-height: 1.6; margin-bottom: 16px;}
-.insight strong {color: var(--primary); font-weight: 700;}
-
-/* Etiquetas Técnicas y Fundamentales */
-.tags-container {display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px dashed var(--border);}
-.tag {font-size: 0.65rem; padding: 5px 10px; border-radius: 6px; font-weight: 700; text-transform: uppercase; display: flex; align-items: center; gap: 4px;}
-.tag-tech {background: var(--blue-light); color: var(--blue); border: 1px solid #bfdbfe;}
-.tag-fund {background: #fffbeb; color: #b45309; border: 1px solid #fde68a;}
-
-.btn-action {width: 100%; padding: 12px; background: #f8fafc; color: var(--text-main); border: 1px solid var(--border); border-radius: 10px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;}
-.btn-action:hover {background: var(--primary-light); color: var(--primary); border-color: var(--primary-light);}
+.alert-card {background: var(--bg-card); border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); box-shadow: 0 4px 10px rgba(0,0,0,0.03); border-left: 4px solid var(--primary);}
+.card-header {display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;}
+.ticker {font-size: 1rem; font-weight: 800; color: var(--text-main);}
+.time {font-size: 0.7rem; color: var(--text-sec); font-weight: 600;}
+.insight {font-size: 0.85rem; color: var(--text-sec); line-height: 1.5; margin-bottom: 12px;}
 
 /* Formularios y Ajustes */
 .pro-card {margin: 15px 20px; background: linear-gradient(135deg, #111827, #1f2937); color: white; padding: 24px; border-radius: 16px; text-align: center; position: relative; overflow: hidden;}
@@ -90,7 +88,6 @@ body {display: flex; justify-content: center;}
 .nav-item.active {color: var(--primary);}
 .nav-icon {font-size: 1.4rem; margin-bottom: 2px;}
 
-/* Toast Notification */
 .toast {position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); background: #1f2937; color: #fff; padding: 12px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); opacity: 0; transition: opacity 0.3s; z-index: 100; pointer-events: none; width: 85%;}
 .toast.show {opacity: 1;}
 </style>
@@ -103,69 +100,24 @@ body {display: flex; justify-content: center;}
     <div class="status-badge" id="data-status">Modo: Scraping</div>
   </div>
 
-  <!-- VISTA 1: ALERTAS ALGORTÍMICAS -->
-  <div id="tab-alertas" class="tab-content active">
-    <div class="section-title" style="margin-top:20px;">Señales de Alta Convicción</div>
-
-    <div class="feed">
-      <!-- Alerta Acción -->
-      <div class="alert-card">
-        <div class="card-header">
-          <div class="ticker">
-            <div class="asset-icon icon-stock" style="width:28px; height:28px; font-size:0.8rem; border-radius:6px;">📈</div>
-            AAPL <span class="ticker-type">Acción</span>
-          </div>
-          <div class="time">Hace 15 min</div>
-        </div>
-        <div class="insight"><strong>Validación Algorítmica:</strong> El motor detectó un aumento interanual sólido en el Beneficio por Acción (BPA) que coincide exactamente con un quiebre de tendencia bajista (MACD) en el gráfico diario.</div>
-        <div class="tags-container">
-          <span class="tag tag-fund">🏦 BPA +12% YoY</span>
-          <span class="tag tag-fund">🏦 PER: 28.5</span>
-          <span class="tag tag-tech">📊 MACD Cruce Alcista</span>
-          <span class="tag tag-tech">📊 Resistencia Rota</span>
-        </div>
-        <button class="btn-action" onclick="showToast('Evaluando profundidad del mercado...')">Ver Análisis Detallado</button>
-      </div>
-
-      <!-- Alerta Cripto -->
-      <div class="alert-card crypto-alert">
-        <div class="card-header">
-          <div class="ticker">
-            <div class="asset-icon icon-crypto" style="width:28px; height:28px; font-size:0.8rem; border-radius:6px;">₿</div>
-            BTC <span class="ticker-type">Cripto</span>
-          </div>
-          <div class="time">Hace 1 hora</div>
-        </div>
-        <div class="insight"><strong>Señal de Acumulación:</strong> Fuerte ingreso de flujos institucionales en ETFs (Dato On-Chain) validando un soporte técnico dinámico. El RSI indica sobreventa extrema.</div>
-        <div class="tags-container">
-          <span class="tag tag-fund" style="background:#fef08a; border-color:#eab308; color:#854d0e;">⛓️ Flujo ETF +$400M</span>
-          <span class="tag tag-tech">📊 RSI < 30 (Sobrevendido)</span>
-          <span class="tag tag-tech">📊 Soporte Dinámico</span>
-        </div>
-        <button class="btn-action" onclick="showToast('Evaluando liquidez del order book...')">Ver Análisis Detallado</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- VISTA 2: MERCADO (Dividido Acciones / Cripto) -->
-  <div id="tab-mercado" class="tab-content">
+  <!-- VISTA 1: MERCADO (Buscador y Activos Desplegables) -->
+  <div id="tab-mercado" class="tab-content active">
     
-    <!-- Selector Acciones / Cripto -->
-    <div class="market-toggle">
-      <div class="toggle-btn active" id="btn-toggle-stocks" onclick="toggleMarket('stocks')">Acciones (TradFi)</div>
-      <div class="toggle-btn" id="btn-toggle-crypto" onclick="toggleMarket('crypto')">Criptoactivos</div>
+    <div class="search-container">
+      <input type="text" class="search-bar" placeholder="Buscar empresa o ticker (ej. AAPL, BTC)..." onfocus="showToast('Buscador simulado. Mostrando top assets.')">
     </div>
-
-    <!-- Lista Acciones -->
-    <div id="list-stocks">
-      <div class="section-title">Wall Street · Screener</div>
-      <div class="asset-list">
-        <div class="asset-card">
+    
+    <div class="section-title">Activos Destacados</div>
+    
+    <div class="asset-list">
+      <!-- AAPL Desplegable -->
+      <div class="asset-card" onclick="toggleDetails(this)">
+        <div class="asset-header">
           <div class="asset-left">
             <div class="asset-icon icon-stock">MS</div>
             <div>
               <div class="asset-name">Microsoft Corp.</div>
-              <div class="asset-metrics"><span>PER: 35.2</span><span>EPS: $11.06</span></div>
+              <div style="font-size:0.75rem; color:var(--text-sec); font-weight:600;">MSFT · Nasdaq</div>
             </div>
           </div>
           <div class="asset-right">
@@ -173,12 +125,28 @@ body {display: flex; justify-content: center;}
             <div class="asset-change up">▲ 1.25%</div>
           </div>
         </div>
-        <div class="asset-card">
+        <div class="asset-details">
+          <div class="detail-tabs">
+            <div class="btn-tab active-tech" onclick="event.stopPropagation();">Análisis Técnico</div>
+            <div class="btn-tab active-fund" onclick="event.stopPropagation();">Análisis Fundamental</div>
+          </div>
+          <div class="data-grid">
+            <div class="data-box"><div class="data-label">RSI (14)</div><div class="data-val val-bull">58.4 (Neutral)</div></div>
+            <div class="data-box"><div class="data-label">P/E Ratio</div><div class="data-val">35.2</div></div>
+            <div class="data-box"><div class="data-label">Media Móvil 50</div><div class="data-val">$402.10</div></div>
+            <div class="data-box"><div class="data-label">Beneficio p/ Acción</div><div class="data-val val-bull">$11.06 (+12%)</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TSLA Desplegable -->
+      <div class="asset-card" onclick="toggleDetails(this)">
+        <div class="asset-header">
           <div class="asset-left">
             <div class="asset-icon icon-stock">TS</div>
             <div>
               <div class="asset-name">Tesla Inc.</div>
-              <div class="asset-metrics"><span>PER: 42.8</span><span>EPS: $3.12</span></div>
+              <div style="font-size:0.75rem; color:var(--text-sec); font-weight:600;">TSLA · Nasdaq</div>
             </div>
           </div>
           <div class="asset-right">
@@ -186,19 +154,28 @@ body {display: flex; justify-content: center;}
             <div class="asset-change down">▼ 2.10%</div>
           </div>
         </div>
+        <div class="asset-details">
+          <div class="detail-tabs">
+            <div class="btn-tab active-tech" onclick="event.stopPropagation();">Análisis Técnico</div>
+            <div class="btn-tab active-fund" onclick="event.stopPropagation();">Análisis Fundamental</div>
+          </div>
+          <div class="data-grid">
+            <div class="data-box"><div class="data-label">RSI (14)</div><div class="data-val val-bear">32.1 (Sobrevendido)</div></div>
+            <div class="data-box"><div class="data-label">P/E Ratio</div><div class="data-val">42.8</div></div>
+            <div class="data-box"><div class="data-label">Tendencia Corta</div><div class="data-val val-bear">Bajista (MACD)</div></div>
+            <div class="data-box"><div class="data-label">Margen Operativo</div><div class="data-val val-bear">8.2% (Caída)</div></div>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <!-- Lista Cripto -->
-    <div id="list-crypto" style="display: none;">
-      <div class="section-title">Mercado Cripto · Screener</div>
-      <div class="asset-list">
-        <div class="asset-card">
+      <!-- BTC Desplegable -->
+      <div class="asset-card" onclick="toggleDetails(this)">
+        <div class="asset-header">
           <div class="asset-left">
             <div class="asset-icon icon-crypto">₿</div>
             <div>
               <div class="asset-name">Bitcoin</div>
-              <div class="asset-metrics"><span>Vol 24h: $32B</span><span>Dom: 52%</span></div>
+              <div style="font-size:0.75rem; color:var(--text-sec); font-weight:600;">BTC · Cripto</div>
             </div>
           </div>
           <div class="asset-right">
@@ -206,19 +183,52 @@ body {display: flex; justify-content: center;}
             <div class="asset-change up">▲ 3.40%</div>
           </div>
         </div>
-        <div class="asset-card">
-          <div class="asset-left">
-            <div class="asset-icon icon-crypto" style="background:#e0e7ff; color:#3730a3;">♦</div>
-            <div>
-              <div class="asset-name">Ethereum</div>
-              <div class="asset-metrics"><span>Vol 24h: $14B</span><span>Gas: 15 gwei</span></div>
-            </div>
+        <div class="asset-details">
+          <div class="detail-tabs">
+            <div class="btn-tab active-tech" onclick="event.stopPropagation();">Análisis Técnico</div>
+            <div class="btn-tab active-fund" onclick="event.stopPropagation();">On-Chain / Data</div>
           </div>
-          <div class="asset-right">
-            <div class="asset-price">$3,450</div>
-            <div class="asset-change down">▼ 0.85%</div>
+          <div class="data-grid">
+            <div class="data-box"><div class="data-label">Soporte Clave</div><div class="data-val">$61,500</div></div>
+            <div class="data-box"><div class="data-label">Volumen 24h</div><div class="data-val val-bull">$32.5B</div></div>
+            <div class="data-box"><div class="data-label">RSI (Diario)</div><div class="data-val">62.8</div></div>
+            <div class="data-box"><div class="data-label">Flujo Institucional</div><div class="data-val val-bull">Acumulación (ETFs)</div></div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VISTA 2: ALERTAS (Historial) -->
+  <div id="tab-alertas" class="tab-content">
+    <div class="section-title" style="margin-top:20px;">Historial de Alertas Generadas</div>
+
+    <div class="feed">
+      <!-- Alerta 1 -->
+      <div class="alert-card">
+        <div class="card-header">
+          <div class="ticker">AAPL - Apple Inc.</div>
+          <div class="time">Hace 15 min</div>
+        </div>
+        <div class="insight"><strong>Validación Algorítmica:</strong> El motor detectó un aumento interanual sólido en el Beneficio por Acción (BPA) que coincide con un quiebre de tendencia bajista (MACD).</div>
+      </div>
+
+      <!-- Alerta 2 -->
+      <div class="alert-card">
+        <div class="card-header">
+          <div class="ticker">BTC - Bitcoin</div>
+          <div class="time">Ayer 18:30</div>
+        </div>
+        <div class="insight"><strong>Señal Cripto:</strong> Fuerte ingreso de flujos institucionales en ETFs (Dato On-Chain) validando el soporte técnico de USD 61,500.</div>
+      </div>
+
+      <!-- Alerta 3 -->
+      <div class="alert-card" style="border-left-color: var(--red);">
+        <div class="card-header">
+          <div class="ticker">TSLA - Tesla Inc.</div>
+          <div class="time">10/Oct 09:15</div>
+        </div>
+        <div class="insight"><strong>Alerta de Riesgo:</strong> Contracción de márgenes operativos revelada en balance trimestral, sumada a ruptura técnica de media móvil de 200 días.</div>
       </div>
     </div>
   </div>
@@ -230,7 +240,6 @@ body {display: flex; justify-content: center;}
       <div style="font-size:3.5rem; margin-bottom:15px; opacity:0.8;">🎛️</div>
       <h3 style="color:var(--text-main); font-size:1.15rem; margin-bottom:8px;">Sin activos en seguimiento</h3>
       <p style="font-size:0.85rem; line-height:1.6; max-width:280px; margin:0 auto;">Agregá acciones o criptos para que AuraTrade cruce su data técnica y fundamental 24/7 por vos.</p>
-      <button class="btn-action" style="margin-top:25px; max-width:220px; background:var(--primary); color:white;" onclick="showToast('Buscador de activos desactivado en el prototipo.')">+ Configurar Activo</button>
     </div>
   </div>
 
@@ -243,30 +252,15 @@ body {display: flex; justify-content: center;}
       <p>Data obtenida vía web scraping con 15 min de retraso. Cruces algorítmicos estándar.</p>
       <button class="btn-upgrade" onclick="togglePro()">Desbloquear PRO (API Real-Time)</button>
     </div>
-
-    <div class="section-title">Motor de Inteligencia</div>
-    <div style="padding: 0 20px;">
-      <div style="background:var(--bg-card); padding:15px; border-radius:12px; border:1px solid var(--border); margin-bottom:12px;">
-        <div style="font-size:0.8rem; font-weight:700; color:var(--text-main); margin-bottom:4px;">Peso de Análisis Fundamental</div>
-        <div style="font-size:0.7rem; color:var(--text-sec); margin-bottom:10px;">Influencia de balances y valuación en las alertas.</div>
-        <input type="range" min="1" max="100" value="50" style="width:100%; accent-color:var(--primary);">
-      </div>
-      
-      <div style="background:var(--bg-card); padding:15px; border-radius:12px; border:1px solid var(--border);">
-        <div style="font-size:0.8rem; font-weight:700; color:var(--text-main); margin-bottom:4px;">Peso de Análisis Técnico</div>
-        <div style="font-size:0.7rem; color:var(--text-sec); margin-bottom:10px;">Influencia de indicadores de precio y volumen.</div>
-        <input type="range" min="1" max="100" value="50" style="width:100%; accent-color:var(--blue);">
-      </div>
-    </div>
   </div>
 
   <!-- Menú de Navegación Fijo Abajo -->
   <div class="bottom-nav">
-    <button class="nav-item active" id="btn-alertas" onclick="switchTab('alertas')">
-      <span class="nav-icon">⚡</span><span>Alertas</span>
-    </button>
-    <button class="nav-item" id="btn-mercado" onclick="switchTab('mercado')">
+    <button class="nav-item active" id="btn-mercado" onclick="switchTab('mercado')">
       <span class="nav-icon">📊</span><span>Mercado</span>
+    </button>
+    <button class="nav-item" id="btn-alertas" onclick="switchTab('alertas')">
+      <span class="nav-icon">⚡</span><span>Alertas</span>
     </button>
     <button class="nav-item" id="btn-cartera" onclick="switchTab('cartera')">
       <span class="nav-icon">🎛️</span><span>Cartera</span>
@@ -299,20 +293,14 @@ body {display: flex; justify-content: center;}
     document.getElementById('btn-' + tabId).classList.add('active');
   }
 
-  function toggleMarket(marketType) {
-    // Manejo de botones
-    document.getElementById('btn-toggle-stocks').classList.remove('active');
-    document.getElementById('btn-toggle-crypto').classList.remove('active');
-    document.getElementById('btn-toggle-' + marketType).classList.add('active');
-
-    // Manejo de listas
-    if(marketType === 'stocks') {
-      document.getElementById('list-stocks').style.display = 'block';
-      document.getElementById('list-crypto').style.display = 'none';
-    } else {
-      document.getElementById('list-stocks').style.display = 'none';
-      document.getElementById('list-crypto').style.display = 'block';
-    }
+  // Desplegar/Ocultar detalles de la empresa
+  function toggleDetails(element) {
+    // Cerrar las otras
+    document.querySelectorAll('.asset-card').forEach(card => {
+      if(card !== element) card.classList.remove('expanded');
+    });
+    // Alternar la actual
+    element.classList.toggle('expanded');
   }
 
   let isPro = false;
