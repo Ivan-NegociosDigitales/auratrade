@@ -118,6 +118,12 @@ button { font-family: inherit; }
 .tag { font-size: 0.65rem; font-weight: 800; color: #7a5c00; background: #fbf3d5; border: 1px solid var(--accent); padding: 3px 8px; border-radius: 10px; white-space: nowrap; }
 
 .alert-badge { display: flex; flex-direction: column; gap: 2px; padding: 9px 14px; border-radius: 10px; margin-bottom: 14px; border: 2px solid; }
+.alert-summary { cursor: pointer; border-radius: 10px; }
+.alert-badge { position: relative; padding-right: 36px; }
+.alert-card:not(.open) .alert-badge { margin-bottom: 0; }
+.chev { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 0.9rem; transition: transform 0.2s; }
+.alert-card.open .chev { transform: translateY(-50%) rotate(180deg); }
+@media (prefers-reduced-motion: reduce) { .chev { transition: none; } }
 .badge-dir { font-weight: 800; font-size: 0.9rem; letter-spacing: 0.3px; }
 .badge-rule { font-weight: 600; font-size: 0.8rem; }
 .alert-badge.bull { background: var(--buy-bg); color: var(--buy-text); border-color: var(--buy-border); }
@@ -832,6 +838,7 @@ window.AURA_CONFIG = {
     aiTexts: store.get('aura.aiTexts.v2', {}),
     prices: {},
     alerts: [],
+    openAlerts: new Set(),  // alertas desplegadas (se mantienen al refrescar el feed)
     market: 'crypto',
     filter: 'all',
     status: 'connecting',
@@ -1140,8 +1147,10 @@ window.AURA_CONFIG = {
           <div class="argument-title">Análisis fundamental</div>
           <p class="insight">No hay datos fundamentales disponibles para este activo en este momento.</p>
         </section>`;
+    const open = state.openAlerts.has(a.id);
     return `
-      <article class="alert-card ${cls}">
+      <article class="alert-card ${cls} ${open ? 'open' : ''}">
+        <div class="alert-summary" role="button" tabindex="0" aria-expanded="${open}" data-toggle-alert="${esc(a.id)}">
         <header class="card-header">
           <div class="ticker-row">
             ${logoHTML(a.kind === 'crypto' ? 'crypto' : 'stock', a.symbol, (a.kind === 'crypto' ? baseOf(a.symbol) : a.symbol).slice(0, 2), 'ticker-logo')}
@@ -1157,7 +1166,10 @@ window.AURA_CONFIG = {
         <div class="alert-badge ${cls}">
           <span class="badge-dir">${label}</span>
           <span class="badge-rule">${esc(a.title)}</span>
+          <span class="chev" aria-hidden="true">▾</span>
         </div>
+        </div>
+        <div class="alert-body" ${open ? '' : 'hidden'}>
         <section class="argument-box">
           <div class="argument-title">Análisis técnico</div>
           <ul class="evidence">${a.evidence.map(e => `<li>${esc(e)}</li>`).join('')}</ul>
@@ -1185,6 +1197,7 @@ window.AURA_CONFIG = {
           </div>
         </div>
         <div class="levels-foot">Entrada de referencia ${esc(fmtPrice(a.levels.entry))}. Relación riesgo/beneficio ${esc(a.levels.rr)}.</div>
+        </div>
       </article>`;
   }
 
@@ -1590,6 +1603,25 @@ window.AURA_CONFIG = {
       restartWS(); runEngine();
     }
   });
+  // Desplegar / plegar una alerta
+  function toggleAlert(el) {
+    const id = el.dataset.toggleAlert;
+    const card = el.closest('.alert-card');
+    const open = !state.openAlerts.has(id);
+    if (open) state.openAlerts.add(id); else state.openAlerts.delete(id);
+    card.classList.toggle('open', open);
+    card.querySelector('.alert-body').hidden = !open;
+    el.setAttribute('aria-expanded', open);
+  }
+  $('#alerts-feed').addEventListener('click', e => {
+    const el = e.target.closest('[data-toggle-alert]');
+    if (el) toggleAlert(el);
+  });
+  $('#alerts-feed').addEventListener('keydown', e => {
+    const el = e.target.closest('[data-toggle-alert]');
+    if (el && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); toggleAlert(el); }
+  });
+
   const searchInput = $('#search');
   searchInput.addEventListener('input', onSearch);
   searchInput.addEventListener('focus', () => { loadCryptoUniverse().catch(() => {}); updateSuggestions(); });
