@@ -147,7 +147,12 @@ button { font-family: inherit; }
 .param-title { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; color: var(--text-sec); }
 .param-price { font-size: 1.05rem; font-weight: 800; margin-top: 4px; }
 .param-note { font-size: 0.68rem; color: var(--text-sec); margin-top: 4px; line-height: 1.35; }
-.param-inv { background: #fffbeb; border-color: #fde68a; }
+.param-tp { background: #f0fdf4; border-color: #86efac; }
+.param-tp .param-title, .param-tp .param-price { color: #15803d; }
+.param-sl { background: #fef2f2; border-color: #fca5a5; }
+.param-sl .param-title, .param-sl .param-price { color: #b91c1c; }
+.levels-foot { margin-top: 8px; font-size: 0.7rem; color: var(--text-sec); text-align: center; font-weight: 600; }
+.argument-box .confluence { margin: 10px 0 0; }
 
 .empty { text-align: center; color: var(--text-sec); padding: 40px 10px; }
 .empty-icon { font-size: 3rem; margin-bottom: 12px; opacity: 0.8; }
@@ -155,6 +160,33 @@ button { font-family: inherit; }
 .empty p { font-size: 0.85rem; line-height: 1.6; max-width: 290px; margin: 0 auto; }
 
 .disclaimer { margin: 4px 20px 0; font-size: 0.7rem; color: var(--text-sec); line-height: 1.5; }
+
+/* Logos */
+.logo-box { position: relative; overflow: hidden; }
+.logo-box img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; padding: 4px; background: #fff; opacity: 0; transition: opacity 0.2s; }
+.logo-box img.ok { opacity: 1; }
+.logo-box.sr-icon img { padding: 3px; }
+.ticker-row { display: flex; align-items: center; gap: 10px; }
+.ticker-logo { width: 36px; height: 36px; flex-shrink: 0; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; }
+.asset-icon.logo-box, .sr-icon.logo-box, .ticker-logo { border: 1px solid var(--border); }
+
+/* Plan Pro */
+.pro-card { margin: 0 20px 14px; background: linear-gradient(135deg, #0b2a1b, #0f3d26); color: #fff; padding: 22px 18px 18px; border-radius: 16px; }
+.plan-now { display: inline-block; font-size: 0.68rem; font-weight: 700; background: rgba(255,255,255,0.12); padding: 4px 10px; border-radius: 10px; margin-bottom: 10px; }
+.pro-card h3 { margin: 0 0 6px; font-size: 1.2rem; color: var(--accent); }
+.pro-card p { font-size: 0.84rem; opacity: 0.85; margin: 0 0 14px; line-height: 1.5; }
+.plan-table { background: rgba(255,255,255,0.06); border-radius: 12px; padding: 4px 12px; margin-bottom: 14px; }
+.plan-row { display: grid; grid-template-columns: 1fr 52px 52px; align-items: center; gap: 6px; font-size: 0.78rem; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.1); }
+.plan-row span:nth-child(n+2) { text-align: center; }
+.plan-head { border-top: none; font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px; opacity: 0.75; }
+.plan-head span:last-child { color: var(--accent); opacity: 1; }
+.plan-yes { color: #86efac; font-weight: 800; }
+.plan-no { opacity: 0.45; }
+.plan-soon { font-size: 0.62rem; font-weight: 800; color: var(--accent); border: 1px solid rgba(212,175,55,0.6); border-radius: 8px; padding: 2px 5px; }
+.plan-price { font-size: 1.1rem; font-weight: 800; text-align: center; margin-bottom: 10px; }
+.btn-upgrade { background: var(--accent); color: #1a1405; border: none; padding: 13px 20px; border-radius: 10px; font-weight: 800; font-size: 0.92rem; width: 100%; cursor: pointer; }
+.btn-upgrade:hover { filter: brightness(1.05); }
+.plan-msg { margin-top: 10px; font-size: 0.78rem; line-height: 1.45; opacity: 0.9; text-align: center; }
 
 /* Ajustes */
 .settings-card { margin: 0 20px 14px; background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
@@ -193,7 +225,7 @@ button { font-family: inherit; }
     </div>
     <div class="feed-meta" id="alerts-meta">Analizando velas de 1 hora…</div>
     <div class="feed" id="alerts-feed"></div>
-    <p class="disclaimer">AuraTrade emite alertas informativas generadas por reglas técnicas sobre datos públicos. No son recomendaciones de compra o venta ni constituyen asesoramiento financiero.</p>
+    <p class="disclaimer">AuraTrade emite alertas informativas generadas por reglas sobre datos públicos. El take profit y el stop loss son niveles de referencia calculados según la volatilidad; no constituyen una recomendación de inversión ni asesoramiento financiero.</p>
   </main>
 
   <!-- VISTA 2: MERCADOS -->
@@ -250,7 +282,13 @@ window.AURA_CONFIG = {
   ENGINE_MINUTES: 5,
 
   // Cuántas alertas (las más recientes) se mandan a la IA para redactar.
-  AI_MAX_ALERTS: 8
+  AI_MAX_ALERTS: 8,
+
+  // Plan Pro. El precio se muestra en Ajustes si no está vacío (ej. 'US$ 9,99 por mes').
+  PRO_PRICE: '',
+  // Link de pago (por ejemplo un link de Mercado Pago o Stripe). Si está vacío,
+  // el botón "Pasar a Pro" avisa que las suscripciones todavía no abrieron.
+  PRO_CHECKOUT_URL: ''
 };
 
 // Indicadores técnicos calculados localmente a partir de velas OHLCV.
@@ -357,7 +395,9 @@ window.AURA_CONFIG = {
   const LOOKBACK = 24;      // velas recientes en las que se buscan señales
   const MIN_CANDLES = 260;  // EMA 200 + ventanas de búsqueda y enfriamiento
   const HOUR = 3600000;
-  const COOLDOWN = 12;      // velas mínimas entre dos alertas de la misma regla
+  const COOLDOWN = 12;
+  const TP_ATR = 3;         // take profit a 3 ATR de la entrada
+  const SL_ATR = 2;         // stop loss a 2 ATR de la entrada (relación 1:1,5)      // velas mínimas entre dos alertas de la misma regla
 
   // ---------- Reglas ----------
   // Cada regla recibe el contexto de una vela (x) y devuelve una alerta parcial o null.
@@ -367,64 +407,56 @@ window.AURA_CONFIG = {
       evidence: [
         `Cerró en ${P(x.close)}, por encima del máximo de las 20 velas previas (${P(x.hi20)}).`,
         `El volumen fue ${N(x.volRatio, 1)} veces el promedio de 20 velas, lo que respalda la ruptura.`
-      ],
-      invalidation: { levelText: P(x.hi20), text: 'Pierde validez si una vela de 1 h vuelve a cerrar debajo de este nivel.' }
+      ]
     },
     x => (x.close < x.lo20 && x.prevClose >= x.lo20 && x.volRatio >= 1.5) && {
       rule: 'breakout_down', direction: 'bajista', title: 'Ruptura del mínimo de 20 velas',
       evidence: [
         `Cerró en ${P(x.close)}, por debajo del mínimo de las 20 velas previas (${P(x.lo20)}).`,
         `El volumen fue ${N(x.volRatio, 1)} veces el promedio de 20 velas, lo que respalda la ruptura.`
-      ],
-      invalidation: { levelText: P(x.lo20), text: 'Pierde validez si una vela de 1 h vuelve a cerrar encima de este nivel.' }
+      ]
     },
     x => (x.pmacd <= x.psig && x.macd > x.sig) && {
       rule: 'macd_up', direction: 'alcista', title: 'Cruce alcista del MACD',
       evidence: [
         `La línea MACD (${S(x.macd)}) cruzó por encima de su señal (${S(x.sig)}): el impulso de corto plazo gira al alza.`,
         `El RSI de 14 períodos está en ${N(x.rsi, 1)}.`
-      ],
-      invalidation: { levelText: P(x.low), text: 'Se debilita si el precio cierra debajo del mínimo de la vela de la señal.' }
+      ]
     },
     x => (x.pmacd >= x.psig && x.macd < x.sig) && {
       rule: 'macd_down', direction: 'bajista', title: 'Cruce bajista del MACD',
       evidence: [
         `La línea MACD (${S(x.macd)}) cruzó por debajo de su señal (${S(x.sig)}): el impulso de corto plazo gira a la baja.`,
         `El RSI de 14 períodos está en ${N(x.rsi, 1)}.`
-      ],
-      invalidation: { levelText: P(x.high), text: 'Se debilita si el precio cierra encima del máximo de la vela de la señal.' }
+      ]
     },
     x => (x.pe20 <= x.pe50 && x.e20 > x.e50) && {
       rule: 'ema_up', direction: 'alcista', title: 'Cruce de la EMA 20 sobre la EMA 50',
       evidence: [
         `La media exponencial de 20 velas (${P(x.e20)}) cruzó por encima de la de 50 (${P(x.e50)}).`,
         `El precio cerró en ${P(x.close)}, ${x.close > x.e50 ? 'por encima' : 'todavía por debajo'} de la EMA 50.`
-      ],
-      invalidation: { levelText: P(x.e50), text: 'Se debilita si el precio cierra debajo de la EMA 50.' }
+      ]
     },
     x => (x.pe20 >= x.pe50 && x.e20 < x.e50) && {
       rule: 'ema_down', direction: 'bajista', title: 'Cruce de la EMA 20 bajo la EMA 50',
       evidence: [
         `La media exponencial de 20 velas (${P(x.e20)}) cruzó por debajo de la de 50 (${P(x.e50)}).`,
         `El precio cerró en ${P(x.close)}, ${x.close < x.e50 ? 'por debajo' : 'todavía por encima'} de la EMA 50.`
-      ],
-      invalidation: { levelText: P(x.e50), text: 'Se debilita si el precio cierra encima de la EMA 50.' }
+      ]
     },
     x => (x.prsi < 70 && x.rsi >= 70) && {
-      rule: 'rsi_overbought', direction: 'atencion', title: 'RSI en zona de sobrecompra',
+      rule: 'rsi_overbought', direction: 'bajista', title: 'RSI en sobrecompra: posible corrección',
       evidence: [
         `El RSI de 14 períodos subió a ${N(x.rsi, 1)}, por encima de 70.`,
         'Tras subas fuertes este nivel suele anticipar pausas o correcciones, aunque en tendencias firmes puede sostenerse.'
-      ],
-      invalidation: { levelText: 'RSI < 70', text: 'La sobrecompra se disipa cuando el RSI vuelve debajo de 70.' }
+      ]
     },
     x => (x.prsi > 30 && x.rsi <= 30) && {
-      rule: 'rsi_oversold', direction: 'atencion', title: 'RSI en zona de sobreventa',
+      rule: 'rsi_oversold', direction: 'alcista', title: 'RSI en sobreventa: posible rebote',
       evidence: [
         `El RSI de 14 períodos bajó a ${N(x.rsi, 1)}, por debajo de 30.`,
         'Tras caídas fuertes este nivel suele anticipar rebotes, aunque en tendencias bajistas firmes puede sostenerse.'
-      ],
-      invalidation: { levelText: 'RSI > 30', text: 'La sobreventa se disipa cuando el RSI vuelve encima de 30.' }
+      ]
     }
   ];
 
@@ -448,18 +480,64 @@ window.AURA_CONFIG = {
   }
 
   function summarize(a) {
+    const { count, total } = a.confluence;
     const parts = [`Se activó la regla "${a.title}" en ${a.name}, sobre velas de 1 hora.`];
-    if (a.confluence) {
-      const { count, total } = a.confluence;
-      if (count >= 4) parts.push(`La mayoría de los factores técnicos acompaña la lectura (${count} de ${total}).`);
-      else if (count <= 2) parts.push(`Varios factores no la acompañan (${count} de ${total}), por lo que es una señal de baja convicción.`);
-      else parts.push(`Los factores técnicos están mixtos (${count} de ${total}).`);
-    } else {
-      parts.push('Es una alerta de contexto, no de dirección: marca un extremo que conviene vigilar.');
-    }
+    if (count >= 4) parts.push(`En lo técnico, la mayoría de los factores acompaña la lectura (${count} de ${total}).`);
+    else if (count <= 2) parts.push(`En lo técnico, varios factores no la acompañan (${count} de ${total}), por lo que la convicción es baja.`);
+    else parts.push(`En lo técnico, los factores están mixtos (${count} de ${total}).`);
     parts.push(a.context);
-    parts.push(`La volatilidad típica por vela (ATR 14) es de ${P(a.atr)}.`);
+    if (a.fund) parts.push(a.fund.verdict);
+    else parts.push('No hay datos fundamentales disponibles para este activo, así que la lectura es solo técnica.');
+    parts.push(`Los niveles de referencia surgen de la volatilidad típica por vela (ATR 14 de ${P(a.atr)}): take profit en ${P(a.levels.tp)} y stop loss en ${P(a.levels.sl)}.`);
     return parts.join(' ');
+  }
+
+  // ---------- Análisis fundamental (cripto) ----------
+  // c = fila de CoinGecko /coins/markets
+  function usdBig(x) {
+    if (x == null || !isFinite(x)) return '—';
+    if (x >= 1e12) return `US$ ${N(x / 1e12, 2)} billones`;
+    if (x >= 1e9) return `US$ ${N(x / 1e9, 1)} mil millones`;
+    if (x >= 1e6) return `US$ ${N(x / 1e6, 1)} millones`;
+    return P(x);
+  }
+
+  function fundamentals(direction, c) {
+    if (!c || !c.market_cap) return null;
+    const mc = c.market_cap, rank = c.market_cap_rank;
+    const turnover = c.total_volume ? c.total_volume / mc * 100 : null;
+    const dil = c.fully_diluted_valuation ? c.fully_diluted_valuation / mc : null;
+    const supplyBase = c.max_supply || c.total_supply;
+    const circPct = supplyBase && c.circulating_supply ? c.circulating_supply / supplyBase * 100 : null;
+    const ath = c.ath_change_percentage;
+
+    const items = [
+      { label: 'Top 100 por capitalización', ok: rank != null && rank <= 100 },
+      { label: 'Liquidez alta', ok: (turnover != null && turnover >= 3) || c.total_volume >= 1e9 },
+      { label: 'Baja dilución', ok: dil != null && dil <= 1.5 }
+    ];
+    const count = items.filter(i => i.ok).length;
+
+    const evidence = [`Capitalización de ${usdBig(mc)}${rank ? `, puesto ${rank} del mercado` : ''}.`];
+    if (turnover != null) {
+      const calif = c.total_volume >= 1e9 ? 'liquidez profunda'
+        : turnover >= 10 ? 'rotación muy alta'
+        : turnover >= 3 ? 'liquidez saludable'
+        : 'liquidez baja para movimientos grandes';
+      evidence.push(`Operó ${usdBig(c.total_volume)} en 24 h, el ${N(turnover, 1)}% de su capitalización: ${calif}.`);
+    }
+    if (dil != null) {
+      evidence.push(dil <= 1.15
+        ? `Casi toda la oferta ya circula (valuación diluida de ${N(dil, 2)} veces la capitalización), sin presión relevante de nuevas emisiones.`
+        : `La valuación totalmente diluida es ${N(dil, 2)} veces la capitalización${circPct != null ? ` (circula el ${N(circPct, 0)}% de la oferta)` : ''}: ${dil > 2 ? 'riesgo de dilución por desbloqueos futuros' : 'dilución moderada'}.`);
+    }
+    if (ath != null) evidence.push(`Cotiza ${N(Math.abs(ath), 1)}% ${ath < 0 ? 'por debajo' : 'por encima'} de su máximo histórico.`);
+
+    const verdict = direction === 'alcista'
+      ? (count >= 2 ? `En lo fundamental, la base del activo respalda la lectura alcista (${count} de 3).` : `En lo fundamental, la base del activo es débil para sostener una suba (${count} de 3).`)
+      : (count <= 1 ? `En lo fundamental, la base débil del activo refuerza la cautela (${count} de 3).` : `En lo fundamental, la solidez del activo podría amortiguar la caída (${count} de 3).`);
+
+    return { items, count, total: items.length, evidence, verdict };
   }
 
   function analyze(meta, raw) {
@@ -499,10 +577,20 @@ window.AURA_CONFIG = {
         a.time = t[j] + HOUR; // momento de cierre de la vela
         a.priceAtAlert = x.close;
         a.atr = x.atr;
-        a.confluence = a.direction === 'atencion' ? null : confluence(a.direction, x);
+        a.confluence = confluence(a.direction, x);
+        const sign = a.direction === 'alcista' ? 1 : -1;
+        a.levels = {
+          entry: x.close,
+          tp: x.close + sign * TP_ATR * x.atr,
+          sl: x.close - sign * SL_ATR * x.atr,
+          tpNote: `Entrada ${sign > 0 ? '+' : '−'} ${TP_ATR} ATR`,
+          slNote: `Entrada ${sign > 0 ? '−' : '+'} ${SL_ATR} ATR`,
+          rr: `1:${N(TP_ATR / SL_ATR, 1)}`
+        };
         a.context = x.close > x.e200
           ? `En el marco mayor el precio está por encima de la EMA 200 (${P(x.e200)}), con tendencia de fondo alcista.`
           : `En el marco mayor el precio está por debajo de la EMA 200 (${P(x.e200)}), con tendencia de fondo bajista.`;
+        a.fund = null;
         a.summary = summarize(a);
         alerts.push(a);
       }
@@ -518,18 +606,26 @@ window.AURA_CONFIG = {
       temporalidad: 'velas de 1 hora',
       tipo: a.direction,
       regla: a.title,
-      precio_en_la_alerta: P(a.priceAtAlert),
-      evidencia: a.evidence,
-      confluencia: a.confluence
-        ? { resumen: `${a.confluence.count} de ${a.confluence.total}`, factores: a.confluence.items.map(i => `${i.ok ? 'cumple' : 'no cumple'}: ${i.label}`) }
-        : null,
-      contexto: a.context,
-      volatilidad_atr14: P(a.atr),
-      invalidacion: `${a.invalidation.levelText}. ${a.invalidation.text}`
+      precio_de_entrada: P(a.levels.entry),
+      analisis_tecnico: {
+        evidencia: a.evidence,
+        confluencia: `${a.confluence.count} de ${a.confluence.total}`,
+        factores: a.confluence.items.map(i => `${i.ok ? 'cumple' : 'no cumple'}: ${i.label}`),
+        contexto: a.context,
+        volatilidad_atr14: P(a.atr)
+      },
+      analisis_fundamental: a.fund
+        ? { evidencia: a.fund.evidence, solidez: `${a.fund.count} de ${a.fund.total}`, factores: a.fund.items.map(i => `${i.ok ? 'cumple' : 'no cumple'}: ${i.label}`), conclusion: a.fund.verdict }
+        : 'sin datos',
+      niveles: {
+        take_profit: `${P(a.levels.tp)} (${a.levels.tpNote})`,
+        stop_loss: `${P(a.levels.sl)} (${a.levels.slNote})`,
+        relacion_riesgo_beneficio: a.levels.rr
+      }
     };
   }
 
-  global.AuraEngine = { analyze, toPayload };
+  global.AuraEngine = { analyze, toPayload, fundamentals, summarize };
 })(typeof window !== 'undefined' ? window : globalThis);
 
 (function () {
@@ -597,6 +693,41 @@ window.AURA_CONFIG = {
     ['EEM', 'Mercados emergentes ETF', 'ETF']
   ].map(([s, name, ex]) => ({ s, name, ex }));
 
+  // ---------- Logos ----------
+  // Se prueban las fuentes en orden; si ninguna tiene el logo, quedan las iniciales.
+  const LOGO_SOURCES = {
+    crypto: b => [
+      ...(cgBySymbol[b] && cgBySymbol[b].image ? [cgBySymbol[b].image] : []),
+      `https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/${b.toLowerCase()}.png`,
+      `https://assets.coincap.io/assets/icons/${b.toLowerCase()}@2x.png`
+    ],
+    stock: t => [
+      `https://financialmodelingprep.com/image-stock/${encodeURIComponent(t)}.png`,
+      `https://assets.parqet.com/logos/symbol/${encodeURIComponent(t)}?format=png`
+    ]
+  };
+  const cgBySymbol = {}; // datos de CoinGecko por ticker (BTC -> fila de /coins/markets)
+  const logoMemo = {}; // "crypto:BTC" -> URL que funcionó, o -1 si ninguna
+  const logoSrcs = key => { const [kind, t] = key.split(':'); return LOGO_SOURCES[kind](t); };
+
+  function logoHTML(kind, symbol, fallback, cls) {
+    const key = `${kind}:${kind === 'crypto' ? symbol.replace(/USDT$/, '') : symbol}`;
+    const known = logoMemo[key];
+    const srcs = logoSrcs(key);
+    const i = typeof known === 'string' ? Math.max(0, srcs.indexOf(known)) : 0;
+    const img = known === -1 ? '' :
+      `<img alt="" loading="lazy" decoding="async" data-key="${key}" data-i="${i}" src="${esc(srcs[i])}" onload="AuraLogo.ok(this)" onerror="AuraLogo.err(this)">`;
+    return `<span class="${cls} logo-box ${kind === 'crypto' ? 'icon-crypto' : 'icon-stock'}"><span class="logo-fallback">${esc(fallback)}</span>${img}</span>`;
+  }
+  window.AuraLogo = {
+    ok(img) { img.classList.add('ok'); logoMemo[img.dataset.key] = img.getAttribute('src'); },
+    err(img) {
+      const key = img.dataset.key, srcs = logoSrcs(key), next = +img.dataset.i + 1;
+      if (next < srcs.length) { img.dataset.i = next; img.src = srcs[next]; }
+      else { logoMemo[key] = -1; img.remove(); }
+    }
+  };
+
   // ---------- Persistencia local (por navegador) ----------
   const store = {
     get(k, def) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch { return def; } },
@@ -607,7 +738,7 @@ window.AURA_CONFIG = {
     extraCrypto: store.get('aura.extraCrypto', []),
     extraStocks: store.get('aura.extraStocks', []),
     watch: new Set(store.get('aura.watch', [])),
-    aiTexts: store.get('aura.aiTexts', {}),
+    aiTexts: store.get('aura.aiTexts.v2', {}),
     prices: {},
     alerts: [],
     market: 'crypto',
@@ -695,7 +826,7 @@ window.AURA_CONFIG = {
     state.status = kind;
     const el = $('#data-status');
     el.className = 'status-badge ' + kind;
-    el.textContent = { live: 'Cripto en vivo', connecting: 'Conectando…', offline: 'Sin conexión' }[kind];
+    el.textContent = { live: 'Conectado', connecting: 'Conectando…', offline: 'Sin conexión' }[kind];
     renderSettings();
   }
 
@@ -769,6 +900,33 @@ window.AURA_CONFIG = {
     }
   }
 
+  // ---------- Fundamentales cripto (CoinGecko) ----------
+  let fundStatus = 'loading';
+  let fundReady = null;
+  function loadFundamentals() {
+    const url = page => `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=${page}`;
+    fundReady = Promise.all([1, 2].map(pg => fetch(url(pg)).then(r => (r.ok ? r.json() : []))))
+      .then(pages => {
+        pages.flat().forEach(c => {
+          const sym = (c.symbol || '').toUpperCase();
+          if (sym && !cgBySymbol[sym]) cgBySymbol[sym] = c; // ante tickers repetidos, gana la de mayor capitalización
+        });
+        fundStatus = Object.keys(cgBySymbol).length ? 'ok' : 'error';
+        Object.keys(logoMemo).forEach(k => { if (logoMemo[k] === -1) delete logoMemo[k]; });
+        renderMarkets(); renderWatch();
+      })
+      .catch(() => { fundStatus = 'error'; })
+      .finally(() => renderSettings());
+    return fundReady;
+  }
+
+  function attachFundamentals(alerts) {
+    alerts.forEach(a => {
+      a.fund = window.AuraEngine.fundamentals(a.direction, cgBySymbol[baseOf(a.symbol)]);
+      a.summary = window.AuraEngine.summarize(a);
+    });
+  }
+
   // ---------- Motor de alertas ----------
   async function runEngine() {
     if (state.engineRunning) return;
@@ -782,6 +940,9 @@ window.AURA_CONFIG = {
     let failed = 0;
     results.forEach(r => { if (r.status === 'fulfilled') alerts.push(...r.value); else failed++; });
     alerts.sort((a, b) => b.time - a.time);
+    // Se esperan los fundamentales (como máximo 5 s) para que la alerta y la IA los incluyan
+    if (fundReady) await Promise.race([fundReady, new Promise(r => setTimeout(r, 5000))]);
+    attachFundamentals(alerts);
     state.alerts = alerts;
     state.lastRun = Date.now();
     state.engineFailed = failed;
@@ -819,7 +980,7 @@ window.AURA_CONFIG = {
   function saveAI() {
     const ids = Object.keys(state.aiTexts);
     if (ids.length > 60) ids.slice(0, ids.length - 60).forEach(id => delete state.aiTexts[id]);
-    store.set('aura.aiTexts', state.aiTexts);
+    store.set('aura.aiTexts.v2', state.aiTexts);
   }
 
   function paintAI(id) {
@@ -832,21 +993,36 @@ window.AURA_CONFIG = {
   }
 
   // ---------- Render: alertas ----------
+  function chipsHTML(items) {
+    return `<div class="conf-items">${items.map(i => `<span class="chip ${i.ok ? 'ok' : 'no'}">${i.ok ? '✓' : '✕'} ${esc(i.label)}</span>`).join('')}</div>`;
+  }
+
   function alertCardHTML(a) {
-    const cls = { alcista: 'bull', bajista: 'bear', atencion: 'watch' }[a.direction];
-    const label = { alcista: '▲ Alerta alcista', bajista: '▼ Alerta bajista', atencion: '◆ Alerta de atención' }[a.direction];
+    const cls = a.direction === 'alcista' ? 'bull' : 'bear';
+    const label = a.direction === 'alcista' ? '▲ Alerta alcista' : '▼ Alerta bajista';
     const ai = state.aiTexts[a.id];
-    const conf = a.confluence ? `
-      <div class="confluence">
-        <div class="conf-head">Confluencia: ${a.confluence.count} de ${a.confluence.total} factores</div>
-        <div class="conf-items">${a.confluence.items.map(i => `<span class="chip ${i.ok ? 'ok' : 'no'}">${i.ok ? '✓' : '✕'} ${esc(i.label)}</span>`).join('')}</div>
-      </div>` : '';
+    const fund = a.fund ? `
+        <section class="argument-box">
+          <div class="argument-title">Análisis fundamental</div>
+          <ul class="evidence">${a.fund.evidence.map(e => `<li>${esc(e)}</li>`).join('')}</ul>
+          <div class="confluence">
+            <div class="conf-head">Solidez fundamental: ${a.fund.count} de ${a.fund.total}</div>
+            ${chipsHTML(a.fund.items)}
+          </div>
+        </section>` : `
+        <section class="argument-box">
+          <div class="argument-title">Análisis fundamental</div>
+          <p class="insight">No hay datos fundamentales disponibles para este activo en este momento.</p>
+        </section>`;
     return `
       <article class="alert-card ${cls}">
         <header class="card-header">
-          <div>
-            <div class="ticker">${esc(baseOf(a.symbol))} <span class="ticker-name">${esc(a.name)}</span></div>
-            <div class="time">Vela de 1 h cerrada ${esc(ago(a.time))}</div>
+          <div class="ticker-row">
+            ${logoHTML('crypto', a.symbol, baseOf(a.symbol).slice(0, 2), 'ticker-logo')}
+            <div>
+              <div class="ticker">${esc(baseOf(a.symbol))} <span class="ticker-name">${esc(a.name)}</span></div>
+              <div class="time">Vela de 1 h cerrada ${esc(ago(a.time))}</div>
+            </div>
           </div>
           ${state.watch.has(a.symbol) ? '<span class="tag">En cartera</span>' : ''}
         </header>
@@ -855,27 +1031,32 @@ window.AURA_CONFIG = {
           <span class="badge-rule">${esc(a.title)}</span>
         </div>
         <section class="argument-box">
-          <div class="argument-title">Por qué se activó</div>
+          <div class="argument-title">Análisis técnico</div>
           <ul class="evidence">${a.evidence.map(e => `<li>${esc(e)}</li>`).join('')}</ul>
+          <div class="confluence">
+            <div class="conf-head">Confluencia técnica: ${a.confluence.count} de ${a.confluence.total}</div>
+            ${chipsHTML(a.confluence.items)}
+          </div>
         </section>
-        ${conf}
+        ${fund}
         <section class="argument-box">
           <div class="argument-title">Lectura</div>
           <p class="insight" data-ai="${esc(a.id)}">${esc(ai || a.summary)}</p>
           <div class="ai-label ${ai ? 'is-ai' : ''}" data-ai-label="${esc(a.id)}">${ai ? 'Redactado por IA a partir de los datos de esta alerta' : 'Texto automático del motor de reglas'}</div>
         </section>
         <div class="trade-params">
-          <div class="param-box param-inv">
-            <div class="param-title">Invalidación</div>
-            <div class="param-price">${esc(a.invalidation.levelText)}</div>
-            <div class="param-note">${esc(a.invalidation.text)}</div>
+          <div class="param-box param-tp">
+            <div class="param-title">Take Profit</div>
+            <div class="param-price">${esc(fmtPrice(a.levels.tp))}</div>
+            <div class="param-note">${esc(a.levels.tpNote)}</div>
           </div>
-          <div class="param-box">
-            <div class="param-title">Desde la alerta</div>
-            <div class="param-price" data-since="${a.symbol}" data-ref="${a.priceAtAlert}">—</div>
-            <div class="param-note">Precio al activarse: ${esc(fmtPrice(a.priceAtAlert))}</div>
+          <div class="param-box param-sl">
+            <div class="param-title">Stop Loss</div>
+            <div class="param-price">${esc(fmtPrice(a.levels.sl))}</div>
+            <div class="param-note">${esc(a.levels.slNote)}</div>
           </div>
         </div>
+        <div class="levels-foot">Entrada de referencia ${esc(fmtPrice(a.levels.entry))}. Relación riesgo/beneficio ${esc(a.levels.rr)}.</div>
       </article>`;
   }
 
@@ -919,7 +1100,7 @@ window.AURA_CONFIG = {
     return `
       <div class="asset-card" data-symbol="${a.s}" data-search="${esc((a.s + ' ' + a.name).toLowerCase())}">
         <div class="asset-left">
-          <div class="asset-icon ${crypto ? 'icon-crypto' : 'icon-stock'}">${esc(a.icon || a.s.slice(0, 2))}</div>
+          ${logoHTML(crypto ? 'crypto' : 'stock', a.s, a.icon || (crypto ? baseOf(a.s) : a.s).slice(0, 2), 'asset-icon')}
           <div style="min-width:0"><div class="asset-name">${esc(a.name)}</div><div class="asset-desc">${esc(desc)}</div></div>
         </div>
         <div class="asset-end">
@@ -1074,7 +1255,7 @@ window.AURA_CONFIG = {
         const idx = i++;
         return `
         <div class="sr-item ${idx === activeIdx ? 'active' : ''}" role="option" id="sr-${idx}" data-idx="${idx}" aria-selected="${idx === activeIdx}">
-          <span class="sr-icon ${it.kind === 'crypto' ? 'icon-crypto' : 'icon-stock'}">${esc((it.kind === 'crypto' ? it.desc : it.s).slice(0, 2))}</span>
+          ${logoHTML(it.kind, it.s, (it.kind === 'crypto' ? baseOf(it.s) : it.s).slice(0, 2), 'sr-icon')}
           <span class="sr-text"><span class="sr-name">${highlight(it.name, q)}</span><span class="sr-desc">${highlight(it.desc, q)}</span></span>
           <span class="sr-action ${it.inList ? '' : 'add'}">${it.inList ? 'Ver' : '＋ Agregar'}</span>
         </div>`;
@@ -1183,23 +1364,45 @@ window.AURA_CONFIG = {
     const el = $('#settings');
     if (!el) return;
     const st = {
-      live: ['<span class="ok-text">En vivo</span>'],
+      live: ['<span class="ok-text">Conectado</span>'],
       connecting: ['<span class="warn-text">Conectando</span>'],
       offline: ['<span class="bad-text">Sin conexión</span>']
     }[state.status];
     const stocks = { off: '<span class="warn-text">Sin configurar</span>', loading: '<span class="warn-text">Cargando</span>', ok: '<span class="ok-text">Conectado</span>', error: '<span class="bad-text">Con errores</span>' }[state.stocksStatus];
+    const feat = (label, free, pro) => `<div class="plan-row"><span>${label}</span><span>${free}</span><span>${pro}</span></div>`;
+    const yes = '<span class="plan-yes" aria-label="Incluido">✓</span>';
+    const no = '<span class="plan-no" aria-label="No incluido">—</span>';
+    const soon = '<span class="plan-soon">Pronto</span>';
     el.innerHTML = `
+      <div class="pro-card">
+        <div class="plan-now">Tu plan: Gratis</div>
+        <h3>AuraTrade Pro</h3>
+        <p>Más mercados y un análisis más completo en cada alerta.</p>
+        <div class="plan-table">
+          <div class="plan-row plan-head"><span></span><span>Gratis</span><span>Pro</span></div>
+          ${feat('Cripto en tiempo real', yes, yes)}
+          ${feat('Alertas técnicas explicadas', yes, yes)}
+          ${feat('Acciones de Wall Street en tiempo real', no, yes)}
+          ${feat('Explicación redactada por IA', no, yes)}
+          ${feat('Alertas con análisis fundamental', no, soon)}
+          ${feat('Notificaciones push', no, soon)}
+        </div>
+        ${CFG.PRO_PRICE ? `<div class="plan-price">${esc(CFG.PRO_PRICE)}</div>` : ''}
+        <button class="btn-upgrade" data-upgrade>Pasar a Pro</button>
+        <div class="plan-msg" id="plan-msg" role="status" hidden>Las suscripciones Pro todavía no están abiertas. Te avisamos apenas estén disponibles.</div>
+      </div>
       <div class="settings-card">
         <h3>Fuentes de datos</h3>
         <div class="settings-row"><span>Cripto (Binance, WebSocket)</span>${st}</div>
+        <div class="settings-row"><span>Fundamentales cripto (CoinGecko)</span>${{ loading: '<span class="warn-text">Cargando</span>', ok: '<span class="ok-text">Conectado</span>', error: '<span class="bad-text">Sin datos</span>' }[fundStatus]}</div>
         <div class="settings-row"><span>Acciones (Finnhub, vía worker)</span>${stocks}</div>
         <div class="settings-row"><span>Redacción con IA</span>${WORKER ? '<span class="ok-text">Activa</span>' : '<span class="warn-text">Textos automáticos</span>'}</div>
       </div>
       <div class="settings-card">
         <h3>Cómo se generan las alertas</h3>
         <p>Cada ${CFG.ENGINE_MINUTES || 5} minutos el motor descarga las últimas 300 velas de 1 hora de cada activo y calcula EMA 20, 50 y 200, RSI 14, MACD y ATR 14. Una alerta se activa solo cuando se cumple una regla concreta, por ejemplo una ruptura del máximo de 20 velas con volumen 1,5 veces superior al promedio.</p>
-        <p>Cada alerta muestra la evidencia numérica, cuántos factores técnicos la acompañan y el nivel que invalidaría la lectura. Si la IA está activa, redacta la explicación usando únicamente esos datos; si cita una cifra que no está en ellos, el texto se descarta.</p>
-        <p>AuraTrade no emite órdenes de compra o venta ni precios objetivo.</p>
+        <p>Cada alerta suma un análisis fundamental del activo con datos de CoinGecko: tamaño y ranking por capitalización, liquidez (volumen frente a capitalización) y riesgo de dilución (valuación totalmente diluida frente a capitalización).</p>
+        <p>El take profit y el stop loss se calculan con la volatilidad típica del activo: 3 y 2 veces el ATR de 14 velas desde el precio de entrada, una relación riesgo/beneficio de 1:1,5. Si la IA está activa, redacta la explicación usando únicamente estos datos; si cita una cifra que no está en ellos, el texto se descarta.</p>
       </div>
       ${state.extraCrypto.length || state.extraStocks.length ? `
       <div class="settings-card">
@@ -1226,8 +1429,13 @@ window.AURA_CONFIG = {
   }
 
   document.addEventListener('click', e => {
-    const t = e.target.closest('[data-tab],[data-market],[data-star],[data-filter],[data-reset-extra]');
+    const t = e.target.closest('[data-tab],[data-market],[data-star],[data-filter],[data-reset-extra],[data-upgrade]');
     if (!t) return;
+    if (t.hasAttribute('data-upgrade')) {
+      if (CFG.PRO_CHECKOUT_URL) window.open(CFG.PRO_CHECKOUT_URL, '_blank', 'noopener');
+      else $('#plan-msg').hidden = false;
+      return;
+    }
     if (t.dataset.tab) switchTab(t.dataset.tab);
     else if (t.dataset.market) switchMarket(t.dataset.market);
     else if (t.dataset.star) toggleWatch(t.dataset.star);
@@ -1276,9 +1484,11 @@ window.AURA_CONFIG = {
   renderSettings();
   loadTickers();
   connectWS();
+  loadFundamentals();
   runEngine();
   loadStocks();
   setInterval(runEngine, ENGINE_MS);
+  setInterval(loadFundamentals, 15 * 60000);
   setInterval(loadStocks, 60000);
   setInterval(renderAlerts, 60000); // refresca los "hace X min"
 })();
