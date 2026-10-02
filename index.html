@@ -61,7 +61,7 @@ body {display: flex; justify-content: center;}
 .flash-up {color: var(--green) !important;}
 .flash-down {color: var(--red) !important;}
 
-/* Detalle Desplegable */
+/* Detalle Desplegable Mercado */
 .asset-details {display: none; padding: 0 16px 16px; border-top: 1px dashed var(--border); background: #fafafa;}
 .asset-card.expanded .asset-details {display: block;}
 .detail-tabs {display: flex; gap: 8px; margin: 12px 0;}
@@ -75,13 +75,27 @@ body {display: flex; justify-content: center;}
 .val-bull {color: var(--green);}
 .val-bear {color: var(--red);}
 
-/* Historial de Alertas */
+/* HISTORIAL DE ALERTAS REDISEÑADO */
 .feed {padding: 10px 20px;}
-.alert-card {background: var(--bg-card); border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); box-shadow: 0 4px 10px rgba(0,0,0,0.03); border-left: 4px solid var(--primary);}
-.card-header {display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;}
-.ticker {font-size: 1rem; font-weight: 800; color: var(--text-main);}
+.alert-card {background: var(--bg-card); border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.04);}
+.card-header {display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;}
+.ticker {font-size: 1.1rem; font-weight: 800; color: var(--text-main);}
 .time {font-size: 0.7rem; color: var(--text-sec); font-weight: 600;}
-.insight {font-size: 0.85rem; color: var(--text-sec); line-height: 1.5; margin-bottom: 0;}
+
+/* Insignias de Compra/Venta */
+.signal-badge {display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; font-weight: 800; font-size: 0.8rem; margin-bottom: 12px; letter-spacing: 0.5px;}
+.signal-badge.buy {background: #dcfce7; color: #166534; border: 1px solid #86efac;}
+.signal-badge.sell {background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;}
+
+.insight {font-size: 0.85rem; color: var(--text-sec); line-height: 1.6; margin-bottom: 16px;}
+.insight strong {color: var(--text-main); font-weight: 700;}
+
+/* Niveles de Take Profit y Stop Loss */
+.trade-levels {display: flex; gap: 10px; padding-top: 15px; border-top: 1px dashed var(--border);}
+.level {flex: 1; padding: 12px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; text-align: center;}
+.level span {display: block; font-size: 1.1rem; margin-top: 4px; font-weight: 800;}
+.level.tp {background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0;}
+.level.sl {background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;}
 
 /* Formularios y Ajustes */
 .form-group {padding: 0 20px; margin-bottom:15px;}
@@ -94,13 +108,14 @@ body {display: flex; justify-content: center;}
 .pro-card p {font-size: 0.85rem; opacity: 0.85; margin: 0 0 20px; line-height: 1.5;}
 .btn-upgrade {background: var(--accent); color: #000; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 700; font-size: 0.9rem; width: 100%; cursor: pointer;}
 
-/* Navegación Inferior (Con Efecto Activo) */
-.bottom-nav {flex-shrink: 0; background: var(--bg-card); display: flex; justify-content: space-around; padding: 12px 10px; border-top: 1px solid var(--border); z-index: 20;}
-.nav-item {display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-sec); font-size: 0.7rem; font-weight: 600; cursor: pointer; width: 22%; background: transparent; border: none; padding: 8px 0; border-radius: 12px; transition: all 0.3s ease;}
-.nav-item.active {color: var(--primary); background: var(--primary-light); transform: translateY(-3px);}
-.nav-icon {font-size: 1.4rem; margin-bottom: 2px;}
+/* Navegación Inferior (Diseño Activo Inconfundible) */
+.bottom-nav {flex-shrink: 0; background: var(--bg-card); display: flex; justify-content: space-around; padding: 12px 10px; border-top: 1px solid var(--border); z-index: 20; padding-bottom: 20px;}
+.nav-item {display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-sec); font-size: 0.7rem; font-weight: 600; cursor: pointer; width: 22%; background: transparent; border: none; padding: 10px 0; border-radius: 12px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);}
+.nav-item.active {color: #ffffff; background: var(--primary); transform: translateY(-5px); box-shadow: 0 6px 12px rgba(15, 61, 38, 0.3);}
+.nav-item.active .nav-icon {color: var(--accent);}
+.nav-icon {font-size: 1.4rem; margin-bottom: 2px; transition: color 0.3s;}
 
-.toast {position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); background: #1f2937; color: #fff; padding: 12px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); opacity: 0; transition: opacity 0.3s; z-index: 100; pointer-events: none; width: 85%;}
+.toast {position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%); background: #1f2937; color: #fff; padding: 12px 20px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); opacity: 0; transition: opacity 0.3s; z-index: 100; pointer-events: none; width: 85%;}
 .toast.show {opacity: 1;}
 </style>
 </head>
@@ -326,65 +341,63 @@ body {display: flex; justify-content: center;}
         </div>
       </div>
 
-      <div class="asset-card" onclick="toggleDetails(this)">
-        <div class="asset-header">
-          <div class="asset-left">
-            <div class="asset-icon icon-crypto" style="background:#fef08a; color:#ca8a04;">B</div>
-            <div>
-              <div class="asset-name">BNB</div>
-              <div style="font-size:0.75rem; color:var(--text-sec); font-weight:600;">BNB/USDT</div>
-            </div>
-          </div>
-          <div class="asset-right">
-            <div class="asset-price">$580.40</div>
-            <div class="asset-change up">▲ 0.80%</div>
-          </div>
-        </div>
-        <div class="asset-details">
-          <div class="detail-tabs">
-            <div class="btn-tab active-tech">Análisis Técnico</div>
-            <div class="btn-tab active-fund">On-Chain / Data</div>
-          </div>
-          <div class="data-grid">
-            <div class="data-box"><div class="data-label">MACD</div><div class="data-val">Neutral</div></div>
-            <div class="data-box"><div class="data-label">Launchpool Activo</div><div class="data-val val-bull">Sí (Alta Demanda)</div></div>
-            <div class="data-box"><div class="data-label">Media Móvil 50</div><div class="data-val">$565.00</div></div>
-            <div class="data-box"><div class="data-label">Quemas Recientes</div><div class="data-val val-bull">2M BNB</div></div>
-          </div>
-        </div>
-      </div>
-
     </div>
   </div>
 
-  <!-- VISTA 2: ALERTAS (Historial) -->
+  <!-- VISTA 2: ALERTAS (Feed de Toma de Decisiones) -->
   <div id="tab-alertas" class="tab-content">
-    <div class="section-title" style="margin-top:20px;">Historial de Alertas Generadas</div>
+    <div class="section-title" style="margin-top:20px;">Feed de Operaciones (AI)</div>
 
     <div class="feed">
+      
+      <!-- Alerta de Compra -->
       <div class="alert-card">
-        <div class="card-header">
+        <div class="card-header" style="margin-bottom: 8px;">
           <div class="ticker">NVDA - NVIDIA Corp.</div>
           <div class="time">Hace 45 min</div>
         </div>
-        <div class="insight"><strong>Validación Algorítmica:</strong> Aumento explosivo en la revisión de ganancias (+265% YoY) validado por una fuerte ruptura técnica al alza (Breakout de cuña alcista con volumen).</div>
-      </div>
-
-      <div class="alert-card">
-        <div class="card-header">
-          <div class="ticker">BTC - Bitcoin</div>
-          <div class="time">Ayer 18:30</div>
+        <div class="signal-badge buy">🟢 SEÑAL DE COMPRA</div>
+        <div class="insight">
+          <strong>Argumento Fundamental y Técnico:</strong> Aumento explosivo en la revisión de ganancias (+265% YoY) validado por una fuerte ruptura técnica al alza (Breakout de cuña alcista con volumen).
         </div>
-        <div class="insight"><strong>Señal Cripto Institucional:</strong> Ingreso sostenido de capital en los fondos ETF (Data On-Chain) interactuando con zona de soporte técnico crítico en USD 60,500.</div>
+        <div class="trade-levels">
+          <div class="level tp">🎯 Take Profit<br><span>$950.00</span></div>
+          <div class="level sl">🛑 Stop Loss<br><span>$820.00</span></div>
+        </div>
       </div>
 
-      <div class="alert-card" style="border-left-color: var(--red);">
-        <div class="card-header">
+      <!-- Alerta de Venta -->
+      <div class="alert-card">
+        <div class="card-header" style="margin-bottom: 8px;">
           <div class="ticker">TSLA - Tesla Inc.</div>
           <div class="time">10/Oct 09:15</div>
         </div>
-        <div class="insight"><strong>Alerta de Riesgo:</strong> Contracción de márgenes operativos revelada en balance trimestral (Fundamental Bearish), sumada a ruptura técnica de media móvil de 200 días a la baja.</div>
+        <div class="signal-badge sell">🔴 SEÑAL DE VENTA</div>
+        <div class="insight">
+          <strong>Argumento Fundamental y Técnico:</strong> Contracción severa de márgenes operativos revelada en el último balance, sumada a una ruptura técnica a la baja de la media móvil de 200 días.
+        </div>
+        <div class="trade-levels">
+          <div class="level tp" style="background:#fef2f2; color:#b91c1c; border-color:#fecaca;">🎯 Take Profit<br><span>$140.00</span></div>
+          <div class="level sl" style="background:#f0fdf4; color:#15803d; border-color:#bbf7d0;">🛑 Stop Loss<br><span>$192.50</span></div>
+        </div>
       </div>
+
+      <!-- Alerta de Compra Cripto -->
+      <div class="alert-card">
+        <div class="card-header" style="margin-bottom: 8px;">
+          <div class="ticker">BTC - Bitcoin</div>
+          <div class="time">Ayer 18:30</div>
+        </div>
+        <div class="signal-badge buy">🟢 SEÑAL DE COMPRA</div>
+        <div class="insight">
+          <strong>Argumento On-Chain y Técnico:</strong> Ingreso masivo y sostenido de capital institucional en los fondos ETF, interactuando con una zona de soporte técnico crítico e histórico.
+        </div>
+        <div class="trade-levels">
+          <div class="level tp">🎯 Take Profit<br><span>$68,000</span></div>
+          <div class="level sl">🛑 Stop Loss<br><span>$59,500</span></div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -456,15 +469,15 @@ body {display: flex; justify-content: center;}
   }
 
   function switchTab(tabId) {
-    // Esconder todas
+    // Esconder todas las vistas
     const tabs = document.querySelectorAll('.tab-content');
     tabs.forEach(tab => tab.classList.remove('active'));
     
-    // Quitar estado activo del menú
+    // Quitar estado activo de todos los botones del menú
     const navItems = document.querySelectorAll('.nav-item');
     navItems.forEach(btn => btn.classList.remove('active'));
     
-    // Activar seleccionado
+    // Activar vista seleccionada y resaltar botón inconfundiblemente
     document.getElementById('tab-' + tabId).classList.add('active');
     document.getElementById('btn-' + tabId).classList.add('active');
   }
