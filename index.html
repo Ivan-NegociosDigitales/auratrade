@@ -200,6 +200,9 @@ button { font-family: inherit; }
 .settings-card p { font-size: 0.82rem; color: #334155; line-height: 1.55; margin: 0 0 8px; }
 .btn-secondary { margin-top: 6px; border: 1px solid var(--border); background: #fff; padding: 10px 14px; border-radius: 10px; font-weight: 700; font-size: 0.8rem; cursor: pointer; width: 100%; }
 
+.method-list { margin: 0 0 10px; padding-left: 18px; font-size: 0.82rem; color: #334155; line-height: 1.55; }
+.method-list li + li { margin-top: 6px; }
+
 /* Navegación inferior */
 .bottom-nav { flex-shrink: 0; background: var(--bg-card); display: flex; justify-content: space-around; padding: 10px 5px calc(14px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--border); z-index: 20; }
 .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-sec); font-size: 0.7rem; font-weight: 700; cursor: pointer; width: 23%; background: transparent; border: none; padding: 10px 0; border-radius: 12px; transition: all 0.2s; }
@@ -385,19 +388,20 @@ window.AURA_CONFIG = {
 })(typeof window !== 'undefined' ? window : globalThis);
 
 // Motor de reglas de AuraTrade.
-// Recibe velas de 1 hora y devuelve alertas con su evidencia numérica.
-// No emite órdenes ni precios objetivo: explica qué pasó y qué invalidaría la lectura.
+// Recibe velas (1 hora para cripto, diarias para acciones e índices) y devuelve
+// alertas con análisis técnico, análisis fundamental y niveles de take profit / stop loss.
 (function (global) {
   'use strict';
   const { Ind, Fmt } = global;
   const P = Fmt.price, N = Fmt.num, S = Fmt.sig;
 
-  const LOOKBACK = 24;      // velas recientes en las que se buscan señales
-  const MIN_CANDLES = 260;  // EMA 200 + ventanas de búsqueda y enfriamiento
-  const HOUR = 3600000;
-  const COOLDOWN = 12;
+  // Temporalidades: cuántas velas recientes se revisan y cuántas deben pasar entre dos alertas iguales
+  const TF = {
+    '1h': { label: 'velas de 1 hora', ms: 3600000, lookback: 24, cooldown: 12 },
+    '1d': { label: 'velas diarias', ms: 86400000, lookback: 10, cooldown: 5 }
+  };
   const TP_ATR = 3;         // take profit a 3 ATR de la entrada
-  const SL_ATR = 2;         // stop loss a 2 ATR de la entrada (relación 1:1,5)      // velas mínimas entre dos alertas de la misma regla
+  const SL_ATR = 2;         // stop loss a 2 ATR de la entrada (relación 1:1,5)
 
   // ---------- Reglas ----------
   // Cada regla recibe el contexto de una vela (x) y devuelve una alerta parcial o null.
@@ -481,7 +485,7 @@ window.AURA_CONFIG = {
 
   function summarize(a) {
     const { count, total } = a.confluence;
-    const parts = [`Se activó la regla "${a.title}" en ${a.name}, sobre velas de 1 hora.`];
+    const parts = [`Se activó la regla "${a.title}" en ${a.name}, sobre ${a.tfLabel}.`];
     if (count >= 4) parts.push(`En lo técnico, la mayoría de los factores acompaña la lectura (${count} de ${total}).`);
     else if (count <= 2) parts.push(`En lo técnico, varios factores no la acompañan (${count} de ${total}), por lo que la convicción es baja.`);
     else parts.push(`En lo técnico, los factores están mixtos (${count} de ${total}).`);
@@ -502,7 +506,7 @@ window.AURA_CONFIG = {
     return P(x);
   }
 
-  function fundamentals(direction, c) {
+  function cryptoFundamentals(direction, c) {
     if (!c || !c.market_cap) return null;
     const mc = c.market_cap, rank = c.market_cap_rank;
     const turnover = c.total_volume ? c.total_volume / mc * 100 : null;
@@ -537,19 +541,99 @@ window.AURA_CONFIG = {
       ? (count >= 2 ? `En lo fundamental, la base del activo respalda la lectura alcista (${count} de 3).` : `En lo fundamental, la base del activo es débil para sostener una suba (${count} de 3).`)
       : (count <= 1 ? `En lo fundamental, la base débil del activo refuerza la cautela (${count} de 3).` : `En lo fundamental, la solidez del activo podría amortiguar la caída (${count} de 3).`);
 
-    return { items, count, total: items.length, evidence, verdict };
+    return { title: 'Análisis fundamental', scoreLabel: 'Solidez fundamental', items, count, total: items.length, evidence, verdict };
   }
 
-  function analyze(meta, raw) {
+  // Acciones: balances anuales y valuación (datos del worker / FMP)
+  // f = { name, sector, marketCap, fiscalYear, epsGrowth, revGrowth, opMargin, opMarginPrev, pe }
+  function stockFundamentals(direction, f) {
+    if (!f) return null;
+    const has = v => v != null && isFinite(v);
+    if (![f.epsGrowth, f.revGrowth, f.opMargin, f.pe].some(has)) return null;
+    const items = [
+      { label: 'BPA en crecimiento', ok: has(f.epsGrowth) && f.epsGrowth > 0 },
+      { label: 'Ventas en crecimiento', ok: has(f.revGrowth) && f.revGrowth > 0 },
+      { label: 'Margen operativo estable o en suba', ok: has(f.opMargin) && has(f.opMarginPrev) && f.opMargin >= f.opMarginPrev - 0.5 },
+      { label: 'Valuación moderada (P/E < 30)', ok: has(f.pe) && f.pe > 0 && f.pe < 30 }
+    ];
+    const count = items.filter(i => i.ok).length, total = items.length;
+    const anio = f.fiscalYear ? ` en el ejercicio ${f.fiscalYear}` : ' en el último ejercicio';
+    const evidence = [];
+    if (has(f.marketCap)) evidence.push(`Capitalización bursátil de ${usdBig(f.marketCap)}${f.sector ? `, sector ${f.sector}` : ''}.`);
+    if (has(f.epsGrowth)) evidence.push(`El beneficio por acción (BPA) ${f.epsGrowth >= 0 ? 'creció' : 'cayó'} ${N(Math.abs(f.epsGrowth), 1)}% interanual${anio}.`);
+    if (has(f.revGrowth)) evidence.push(`Las ventas ${f.revGrowth >= 0 ? 'crecieron' : 'cayeron'} ${N(Math.abs(f.revGrowth), 1)}% interanual.`);
+    if (has(f.opMargin) && has(f.opMarginPrev)) {
+      const d = f.opMargin - f.opMarginPrev;
+      evidence.push(`El margen operativo ${Math.abs(d) < 0.5 ? 'se mantuvo' : d > 0 ? 'mejoró' : 'se contrajo'}: pasó de ${N(f.opMarginPrev, 1)}% a ${N(f.opMargin, 1)}%.`);
+    }
+    if (has(f.pe) && f.pe > 0) evidence.push(`Cotiza a ${N(f.pe, 1)} veces sus ganancias de los últimos 12 meses (P/E).`);
+    else if (has(f.pe)) evidence.push('Tuvo pérdidas en los últimos 12 meses, por lo que el P/E no es aplicable.');
+    const verdict = direction === 'alcista'
+      ? (count >= 3 ? `En lo fundamental, los balances respaldan la lectura alcista (${count} de ${total}).` : count === 2 ? `En lo fundamental, los balances muestran señales mixtas (${count} de ${total}).` : `En lo fundamental, los balances no acompañan una suba (${count} de ${total}).`)
+      : (count <= 1 ? `En lo fundamental, los balances débiles refuerzan la cautela (${count} de ${total}).` : count === 2 ? `En lo fundamental, los balances muestran señales mixtas (${count} de ${total}).` : `En lo fundamental, la solidez de los balances podría amortiguar la caída (${count} de ${total}).`);
+    return { title: 'Análisis fundamental', scoreLabel: 'Solidez fundamental', items, count, total, evidence, verdict };
+  }
+
+  // Índices y ETFs: no tienen balances propios, así que se usa el contexto de 12 meses del índice
+  function indexContext(direction, st) {
+    if (!st) return null;
+    const items = [
+      { label: 'Rendimiento positivo a 12 meses', ok: st.ret12m > 0 },
+      { label: 'A menos de 10% de máximos', ok: st.fromHigh > -10 },
+      { label: 'Volatilidad bajo su promedio anual', ok: st.vol20 <= st.vol252 }
+    ];
+    const count = items.filter(i => i.ok).length, total = items.length;
+    const evidence = [
+      `En los últimos 12 meses el índice ${st.ret12m >= 0 ? 'subió' : 'bajó'} ${N(Math.abs(st.ret12m), 1)}%.`,
+      `Está ${N(Math.abs(st.fromHigh), 1)}% por debajo de su máximo de 52 semanas (${P(st.high52)}).`,
+      `La volatilidad anualizada de las últimas 20 ruedas es ${N(st.vol20, 1)}%, frente a ${N(st.vol252, 1)}% de promedio en el año: ${st.vol20 <= st.vol252 ? 'un mercado más calmo de lo habitual' : 'un mercado más agitado de lo habitual'}.`
+    ];
+    const verdict = direction === 'alcista'
+      ? (count >= 2 ? `El contexto de 12 meses del índice respalda la lectura alcista (${count} de ${total}).` : `El contexto de 12 meses del índice no acompaña una suba (${count} de ${total}).`)
+      : (count <= 1 ? `El contexto de 12 meses del índice refuerza la cautela (${count} de ${total}).` : `El contexto de 12 meses del índice sigue siendo firme, lo que podría limitar la caída (${count} de ${total}).`);
+    return { title: 'Contexto del índice', scoreLabel: 'Solidez del contexto', items, count, total, evidence, verdict };
+  }
+
+  // Punto de entrada único: elige el análisis según el tipo de activo
+  function fundamentals(a, data) {
+    if (a.kind === 'crypto') return cryptoFundamentals(a.direction, data);
+    if (a.kind === 'etf') return indexContext(a.direction, a.stats);
+    return stockFundamentals(a.direction, data);
+  }
+
+  // Estadísticas de 12 meses a partir de velas diarias (para índices y ETFs)
+  function yearStats(c, h) {
+    const n = c.length;
+    if (n < 253) return null;
+    const rets = [];
+    for (let i = n - 252; i < n; i++) rets.push(Math.log(c[i] / c[i - 1]));
+    const sd = arr => { const m = arr.reduce((a, b) => a + b, 0) / arr.length; return Math.sqrt(arr.reduce((a, b) => a + (b - m) ** 2, 0) / (arr.length - 1)); };
+    const high52 = Math.max(...h.slice(n - 252));
+    return {
+      ret12m: (c[n - 1] / c[n - 253] - 1) * 100,
+      high52,
+      fromHigh: (c[n - 1] / high52 - 1) * 100,
+      vol20: sd(rets.slice(-20)) * Math.sqrt(252) * 100,
+      vol252: sd(rets) * Math.sqrt(252) * 100
+    };
+  }
+
+  // meta = { symbol, name, kind: 'crypto' | 'stock' | 'etf' }
+  // raw = [[tiempo, apertura, máximo, mínimo, cierre, volumen], ...] en orden cronológico
+  // opts = { tf: '1h' | '1d', dropLast: true si la última vela todavía no cerró }
+  function analyze(meta, raw, opts = {}) {
     if (!Array.isArray(raw)) return [];
-    const k = raw.slice(0, -1); // la última vela todavía no cerró
+    const tf = TF[opts.tf || '1h'];
+    const LOOKBACK = tf.lookback, COOLDOWN = tf.cooldown;
+    const k = opts.dropLast === false ? raw : raw.slice(0, -1);
     const n = k.length;
-    if (n < MIN_CANDLES) return [];
+    if (n < 200 + LOOKBACK + COOLDOWN + 21) return [];
 
     const t = k.map(r => +r[0]), h = k.map(r => +r[2]), l = k.map(r => +r[3]),
       c = k.map(r => +r[4]), v = k.map(r => +r[5]);
     const e20 = Ind.ema(c, 20), e50 = Ind.ema(c, 50), e200 = Ind.ema(c, 200);
     const rsi = Ind.rsi(c, 14), m = Ind.macd(c), atr = Ind.atr(h, l, c, 14);
+    const stats = opts.tf === '1d' ? yearStats(c, h) : null;
 
     const alerts = [];
     const lastFired = {};
@@ -574,7 +658,11 @@ window.AURA_CONFIG = {
         a.id = `${meta.symbol}-${a.rule}-${t[j]}`;
         a.symbol = meta.symbol;
         a.name = meta.name;
-        a.time = t[j] + HOUR; // momento de cierre de la vela
+        a.kind = meta.kind || 'crypto';
+        a.tf = opts.tf || '1h';
+        a.tfLabel = tf.label;
+        a.time = t[j] + tf.ms; // momento de cierre de la vela
+        a.stats = stats;
         a.priceAtAlert = x.close;
         a.atr = x.atr;
         a.confluence = confluence(a.direction, x);
@@ -603,7 +691,8 @@ window.AURA_CONFIG = {
     return {
       id: a.id,
       activo: `${a.name} (${a.symbol})`,
-      temporalidad: 'velas de 1 hora',
+      tipo_de_activo: { crypto: 'criptoactivo', stock: 'acción', etf: 'índice / ETF' }[a.kind],
+      temporalidad: a.tfLabel,
       tipo: a.direction,
       regla: a.title,
       precio_de_entrada: P(a.levels.entry),
@@ -615,7 +704,7 @@ window.AURA_CONFIG = {
         volatilidad_atr14: P(a.atr)
       },
       analisis_fundamental: a.fund
-        ? { evidencia: a.fund.evidence, solidez: `${a.fund.count} de ${a.fund.total}`, factores: a.fund.items.map(i => `${i.ok ? 'cumple' : 'no cumple'}: ${i.label}`), conclusion: a.fund.verdict }
+        ? { tipo: a.fund.title, evidencia: a.fund.evidence, solidez: `${a.fund.count} de ${a.fund.total}`, factores: a.fund.items.map(i => `${i.ok ? 'cumple' : 'no cumple'}: ${i.label}`), conclusion: a.fund.verdict }
         : 'sin datos',
       niveles: {
         take_profit: `${P(a.levels.tp)} (${a.levels.tpNote})`,
@@ -652,8 +741,8 @@ window.AURA_CONFIG = {
     { s: 'DOGEUSDT', name: 'Dogecoin', icon: 'D' }
   ];
   const STOCKS = [
-    { s: 'SPY', name: 'S&P 500 ETF', ex: 'NYSE Arca' },
-    { s: 'QQQ', name: 'Nasdaq 100 ETF', ex: 'Nasdaq' },
+    { s: 'SPY', name: 'S&P 500 ETF', ex: 'NYSE Arca', etf: true },
+    { s: 'QQQ', name: 'Nasdaq 100 ETF', ex: 'Nasdaq', etf: true },
     { s: 'AAPL', name: 'Apple Inc.', ex: 'Nasdaq' },
     { s: 'MSFT', name: 'Microsoft Corp.', ex: 'Nasdaq' },
     { s: 'NVDA', name: 'NVIDIA Corp.', ex: 'Nasdaq' },
@@ -691,7 +780,7 @@ window.AURA_CONFIG = {
     ['LOMA', 'Loma Negra', 'ADR argentino'], ['GLOB', 'Globant', 'Acción EE.UU.'],
     ['DIA', 'Dow Jones ETF', 'ETF'], ['IWM', 'Russell 2000 ETF', 'ETF'], ['GLD', 'Oro ETF', 'ETF'],
     ['EEM', 'Mercados emergentes ETF', 'ETF']
-  ].map(([s, name, ex]) => ({ s, name, ex }));
+  ].map(([s, name, ex]) => ({ s, name, ex, etf: ex === 'ETF' }));
 
   // ---------- Logos ----------
   // Se prueban las fuentes en orden; si ninguna tiene el logo, quedan las iniciales.
@@ -746,7 +835,10 @@ window.AURA_CONFIG = {
     status: 'connecting',
     ws: null, wsHost: 0, wsRetry: 0,
     lastRun: null, engineFailed: 0, engineRunning: false,
-    stocksStatus: WORKER ? 'loading' : 'off'
+    stocksStatus: WORKER ? 'loading' : 'off',
+    stockFund: {},          // símbolo -> fundamentales del worker
+    stockEngine: WORKER ? 'loading' : 'off',
+    stockAnalyzed: 0
   };
   const inflightAI = new Set();
 
@@ -922,32 +1014,64 @@ window.AURA_CONFIG = {
 
   function attachFundamentals(alerts) {
     alerts.forEach(a => {
-      a.fund = window.AuraEngine.fundamentals(a.direction, cgBySymbol[baseOf(a.symbol)]);
+      const data = a.kind === 'crypto' ? cgBySymbol[baseOf(a.symbol)] : state.stockFund[a.symbol];
+      a.fund = window.AuraEngine.fundamentals(a, data);
       a.summary = window.AuraEngine.summarize(a);
     });
   }
 
   // ---------- Motor de alertas ----------
-  async function runEngine() {
-    if (state.engineRunning) return;
-    state.engineRunning = true;
+  async function analyzeCrypto() {
     const list = cryptoList();
     const results = await Promise.allSettled(list.map(async m => {
       const k = await binance(`/api/v3/klines?symbol=${m.s}&interval=1h&limit=300`);
-      return window.AuraEngine.analyze({ symbol: m.s, name: m.name }, k);
+      return window.AuraEngine.analyze({ symbol: m.s, name: m.name, kind: 'crypto' }, k, { tf: '1h', dropLast: true });
     }));
+    return results;
+  }
+
+  // Acciones e índices: velas diarias y balances desde el worker (Financial Modeling Prep)
+  async function analyzeStocks() {
+    if (!WORKER) return [];
+    const list = stockList();
+    const results = await Promise.allSettled(list.map(async m => {
+      const [cr, fr] = await Promise.all([
+        fetch(`${WORKER}/candles?symbol=${encodeURIComponent(m.s)}`),
+        m.etf ? Promise.resolve(null) : fetch(`${WORKER}/fundamentals?symbol=${encodeURIComponent(m.s)}`).catch(() => null)
+      ]);
+      if (!cr.ok) throw new Error('Sin velas para ' + m.s);
+      const { candles } = await cr.json();
+      if (fr && fr.ok) {
+        const f = await fr.json();
+        state.stockFund[m.s] = f;
+        if (f.isEtf) m.etf = true;
+      }
+      return window.AuraEngine.analyze({ symbol: m.s, name: m.name, kind: m.etf ? 'etf' : 'stock' }, candles, { tf: '1d', dropLast: false });
+    }));
+    const ok = results.filter(r => r.status === 'fulfilled').length;
+    state.stockAnalyzed = ok;
+    state.stockEngine = ok ? 'ok' : 'error';
+    return results;
+  }
+
+  async function runEngine() {
+    if (state.engineRunning) return;
+    state.engineRunning = true;
+    const [cryptoRes, stockRes] = await Promise.all([analyzeCrypto(), analyzeStocks()]);
     const alerts = [];
     let failed = 0;
-    results.forEach(r => { if (r.status === 'fulfilled') alerts.push(...r.value); else failed++; });
+    [...cryptoRes, ...stockRes].forEach(r => { if (r.status === 'fulfilled') alerts.push(...r.value); else failed++; });
     alerts.sort((a, b) => b.time - a.time);
-    // Se esperan los fundamentales (como máximo 5 s) para que la alerta y la IA los incluyan
+    // Se esperan los fundamentales cripto (como máximo 5 s) para que la alerta y la IA los incluyan
     if (fundReady) await Promise.race([fundReady, new Promise(r => setTimeout(r, 5000))]);
     attachFundamentals(alerts);
     state.alerts = alerts;
     state.lastRun = Date.now();
     state.engineFailed = failed;
+    state.engineTotal = cryptoRes.length + stockRes.length;
     state.engineRunning = false;
     renderAlerts();
+    renderSettings();
     requestAI();
   }
 
@@ -1003,10 +1127,10 @@ window.AURA_CONFIG = {
     const ai = state.aiTexts[a.id];
     const fund = a.fund ? `
         <section class="argument-box">
-          <div class="argument-title">Análisis fundamental</div>
+          <div class="argument-title">${esc(a.fund.title)}</div>
           <ul class="evidence">${a.fund.evidence.map(e => `<li>${esc(e)}</li>`).join('')}</ul>
           <div class="confluence">
-            <div class="conf-head">Solidez fundamental: ${a.fund.count} de ${a.fund.total}</div>
+            <div class="conf-head">${esc(a.fund.scoreLabel)}: ${a.fund.count} de ${a.fund.total}</div>
             ${chipsHTML(a.fund.items)}
           </div>
         </section>` : `
@@ -1018,10 +1142,12 @@ window.AURA_CONFIG = {
       <article class="alert-card ${cls}">
         <header class="card-header">
           <div class="ticker-row">
-            ${logoHTML('crypto', a.symbol, baseOf(a.symbol).slice(0, 2), 'ticker-logo')}
+            ${logoHTML(a.kind === 'crypto' ? 'crypto' : 'stock', a.symbol, (a.kind === 'crypto' ? baseOf(a.symbol) : a.symbol).slice(0, 2), 'ticker-logo')}
             <div>
-              <div class="ticker">${esc(baseOf(a.symbol))} <span class="ticker-name">${esc(a.name)}</span></div>
-              <div class="time">Vela de 1 h cerrada ${esc(ago(a.time))}</div>
+              <div class="ticker">${esc(a.kind === 'crypto' ? baseOf(a.symbol) : a.symbol)} <span class="ticker-name">${esc(a.name)}</span></div>
+              <div class="time">${a.tf === '1d'
+                ? `Vela diaria del ${esc(new Date(a.time - 86400000).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', timeZone: 'UTC' }))}`
+                : `Vela de 1 h cerrada ${esc(ago(a.time))}`}</div>
             </div>
           </div>
           ${state.watch.has(a.symbol) ? '<span class="tag">En cartera</span>' : ''}
@@ -1067,9 +1193,10 @@ window.AURA_CONFIG = {
 
     const list = state.filter === 'watch' ? state.alerts.filter(a => state.watch.has(a.symbol)) : state.alerts;
     const hora = new Date(state.lastRun).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
-    const analizados = cryptoList().length - state.engineFailed;
-    meta.textContent = `Última revisión ${hora}. ${analizados} activos analizados en las últimas 24 velas de 1 hora.` +
-      (state.engineFailed ? ` ${state.engineFailed} no respondieron.` : '');
+    const analizados = (state.engineTotal || 0) - state.engineFailed;
+    meta.textContent = `Última revisión ${hora}. ${analizados} activos analizados.` +
+      (state.engineFailed ? ` ${state.engineFailed} no respondieron.` : '') +
+      (WORKER ? '' : ' Las alertas de acciones e índices se activan al configurar el worker.');
 
     if (!list.length) {
       const watchEmpty = state.filter === 'watch' && state.watch.size === 0;
@@ -1079,7 +1206,7 @@ window.AURA_CONFIG = {
           <h3>${watchEmpty ? 'Tu cartera está vacía' : 'Sin alertas por ahora'}</h3>
           <p>${watchEmpty
             ? 'Marcá con la estrella los activos que te interesan en Mercados y sus alertas aparecen acá.'
-            : `Ninguna regla se activó en las últimas 24 horas. El motor vuelve a revisar cada ${CFG.ENGINE_MINUTES || 5} minutos.`}</p>
+            : `Ninguna regla se activó en las últimas velas analizadas. El motor vuelve a revisar cada ${CFG.ENGINE_MINUTES || 5} minutos.`}</p>
         </div>`;
       return;
     }
@@ -1198,7 +1325,7 @@ window.AURA_CONFIG = {
     return pool
       .map((x, rank) => {
         const score = matchScore(q, x.s, x.name);
-        return score == null ? null : { kind: 'stock', s: x.s, name: x.name, desc: `${x.s} · ${x.ex || 'Acción EE.UU.'}`, ex: x.ex, inList: inList.has(x.s), score, rank };
+        return score == null ? null : { kind: 'stock', s: x.s, name: x.name, desc: `${x.s} · ${x.ex || 'Acción EE.UU.'}`, ex: x.ex, etf: !!x.etf, inList: inList.has(x.s), score, rank };
       })
       .filter(Boolean)
       .sort((a, b) => a.score - b.score || (b.inList - a.inList) || a.rank - b.rank)
@@ -1216,7 +1343,7 @@ window.AURA_CONFIG = {
         if (!r.ok) return;
         const data = await r.json();
         if (seq !== stockSearchSeq) return; // llegó una búsqueda más nueva
-        stockRemote = (data.results || []).map(x => ({ s: x.s, name: x.name, ex: x.type === 'ETP' ? 'ETF' : 'Acción EE.UU.' }));
+        stockRemote = (data.results || []).map(x => ({ s: x.s, name: x.name, ex: x.type === 'ETP' ? 'ETF' : 'Acción EE.UU.', etf: x.type === 'ETP' }));
         updateSuggestions(true);
       } catch { /* queda el catálogo local */ }
     }, 300);
@@ -1351,7 +1478,7 @@ window.AURA_CONFIG = {
 
   function addStock(it) {
     if (stockList().some(x => x.s === it.s)) return true;
-    state.extraStocks.push({ s: it.s, name: it.name, ex: it.ex || 'Acción EE.UU.' });
+    state.extraStocks.push({ s: it.s, name: it.name, ex: it.ex || 'Acción EE.UU.', etf: !!it.etf });
     store.set('aura.extraStocks', state.extraStocks);
     renderMarkets();
     loadStocks();
@@ -1395,13 +1522,19 @@ window.AURA_CONFIG = {
         <h3>Fuentes de datos</h3>
         <div class="settings-row"><span>Cripto (Binance, WebSocket)</span>${st}</div>
         <div class="settings-row"><span>Fundamentales cripto (CoinGecko)</span>${{ loading: '<span class="warn-text">Cargando</span>', ok: '<span class="ok-text">Conectado</span>', error: '<span class="bad-text">Sin datos</span>' }[fundStatus]}</div>
-        <div class="settings-row"><span>Acciones (Finnhub, vía worker)</span>${stocks}</div>
+        <div class="settings-row"><span>Cotizaciones de acciones (Finnhub, vía worker)</span>${stocks}</div>
+        <div class="settings-row"><span>Velas y balances de acciones (FMP, vía worker)</span>${{ off: '<span class="warn-text">Sin configurar</span>', loading: '<span class="warn-text">Cargando</span>', ok: `<span class="ok-text">${state.stockAnalyzed} activos</span>`, error: '<span class="bad-text">Con errores</span>' }[state.stockEngine]}</div>
         <div class="settings-row"><span>Redacción con IA</span>${WORKER ? '<span class="ok-text">Activa</span>' : '<span class="warn-text">Textos automáticos</span>'}</div>
       </div>
       <div class="settings-card">
         <h3>Cómo se generan las alertas</h3>
-        <p>Cada ${CFG.ENGINE_MINUTES || 5} minutos el motor descarga las últimas 300 velas de 1 hora de cada activo y calcula EMA 20, 50 y 200, RSI 14, MACD y ATR 14. Una alerta se activa solo cuando se cumple una regla concreta, por ejemplo una ruptura del máximo de 20 velas con volumen 1,5 veces superior al promedio.</p>
-        <p>Cada alerta suma un análisis fundamental del activo con datos de CoinGecko: tamaño y ranking por capitalización, liquidez (volumen frente a capitalización) y riesgo de dilución (valuación totalmente diluida frente a capitalización).</p>
+        <p>Cada ${CFG.ENGINE_MINUTES || 5} minutos el motor revisa todos los activos con las mismas reglas técnicas: calcula EMA 20, 50 y 200, RSI 14, MACD y ATR 14, y emite una alerta solo cuando se cumple una regla concreta, por ejemplo una ruptura del máximo de 20 velas con volumen 1,5 veces superior al promedio. Las criptomonedas se analizan con velas de 1 hora de Binance; las acciones y los índices, con velas diarias.</p>
+        <p>El análisis fundamental depende del tipo de activo:</p>
+        <ul class="method-list">
+          <li><strong>Acciones:</strong> crecimiento interanual del beneficio por acción y de las ventas, evolución del margen operativo y valuación (P/E), a partir de los balances anuales.</li>
+          <li><strong>Índices y ETFs:</strong> como no tienen balances propios, se evalúa su contexto de 12 meses: rendimiento, distancia al máximo de 52 semanas y volatilidad frente a su promedio anual.</li>
+          <li><strong>Criptomonedas:</strong> capitalización y ranking, liquidez (volumen frente a capitalización) y riesgo de dilución (valuación totalmente diluida frente a capitalización), con datos de CoinGecko.</li>
+        </ul>
         <p>El take profit y el stop loss se calculan con la volatilidad típica del activo: 3 y 2 veces el ATR de 14 velas desde el precio de entrada, una relación riesgo/beneficio de 1:1,5. Si la IA está activa, redacta la explicación usando únicamente estos datos; si cita una cifra que no está en ellos, el texto se descarta.</p>
       </div>
       ${state.extraCrypto.length || state.extraStocks.length ? `
