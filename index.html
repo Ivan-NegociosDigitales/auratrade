@@ -2,493 +2,75 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AuraTrade · Inteligencia Financiera Pro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>AuraTrade · Alertas de mercado explicadas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-:root {
-  --bg-app: #f4f6f8;
-  --bg-card: #ffffff;
-  --primary: #0f3d26;
-  --primary-light: #e6f0eb;
-  --accent: #d4af37;
-  --text-main: #111827;
-  --text-sec: #6b7280;
-  --border: #e5e7eb;
-  --buy-bg: #dcfce7;
-  --buy-text: #166534;
-  --buy-border: #22c55e;
-  --sell-bg: #fee2e2;
-  --sell-text: #991b1b;
-  --sell-border: #ef4444;
-}
-html, body {height: 100%; margin: 0; padding: 0; background: transparent; font-family: 'Inter', sans-serif;}
-body {display: flex; justify-content: center;}
-
-.app-container {width: 100%; max-width: 420px; height: 100%; background: var(--bg-app); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 0 25px rgba(0,0,0,0.08); position: relative;}
-
-/* Header */
-.header {flex-shrink: 0; background: #fff; padding: 20px 20px 15px; text-align: center; position: relative; z-index: 10; border-bottom: 1px solid var(--border);}
-.logo {display: block; margin: 0 auto; width: 160px; max-width: 60%; height: auto;}
-.status-badge {position: absolute; top: 22px; right: 20px; font-size: 0.65rem; background: var(--primary-light); color: var(--primary); padding: 5px 10px; border-radius: 12px; font-weight: 700; letter-spacing: 0.5px;}
-
-.tab-content {flex: 1; overflow-y: auto; padding-bottom: 30px; display: none; background: var(--bg-app);}
-.tab-content.active {display: block;}
-.section-title {padding: 0 20px; font-size: 0.8rem; font-weight: 800; color: var(--text-sec); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; margin-top: 15px;}
-
-/* Buscador Principal */
-.search-container {padding: 15px 20px 5px;}
-.search-bar {width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--border); background: #fff; font-size: 0.9rem; font-family: 'Inter', sans-serif; outline: none;}
-
-/* Toggle Switch (Acciones vs Cripto) */
-.market-toggle {display: flex; background: #e5e7eb; border-radius: 12px; margin: 15px 20px 5px; padding: 4px;}
-.toggle-btn {flex: 1; text-align: center; padding: 10px 0; font-size: 0.85rem; font-weight: 700; color: var(--text-sec); cursor: pointer; border-radius: 8px; transition: all 0.3s ease;}
-.toggle-btn.active {color: var(--primary); background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.05);}
-
-/* Tarjetas de Activos (Mercado) */
-.asset-list {padding: 10px 20px;}
-.asset-card {background: var(--bg-card); border-radius: 14px; border: 1px solid var(--border); margin-bottom: 10px; padding: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
-.asset-left {display: flex; gap: 12px; align-items: center;}
-.asset-icon {width: 40px; height: 40px; border-radius: 10px; display: flex; justify-content: center; align-items: center; font-size: 1.1rem; font-weight: bold;}
-.icon-stock {background: var(--primary-light); color: var(--primary);}
-.icon-crypto {background: #fef08a; color: #854d0e;}
-.asset-name {font-weight: 700; font-size: 0.95rem; color: var(--text-main); margin-bottom: 2px;}
-.asset-desc {font-size: 0.7rem; color: var(--text-sec); font-weight: 600;}
-.asset-right {text-align: right;}
-.asset-price {font-weight: 800; font-size: 1.05rem; color: var(--text-main); transition: color 0.3s;}
-.asset-change {font-size: 0.75rem; font-weight: 700; margin-top: 2px;}
-.up {color: var(--buy-border);}
-.down {color: var(--sell-border);}
-
-/* HISTORIAL DE ALERTAS REDISEÑADO */
-.feed {padding: 10px 20px;}
-.alert-card {background: var(--bg-card); border-radius: 16px; padding: 20px; margin-bottom: 18px; border: 1px solid var(--border); box-shadow: 0 6px 15px rgba(0,0,0,0.05);}
-.card-header {display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;}
-.ticker {font-size: 1.15rem; font-weight: 800; color: var(--text-main);}
-.time {font-size: 0.7rem; color: var(--text-sec); font-weight: 600;}
-
-/* Orden Compra/Venta */
-.order-badge {display: inline-block; padding: 8px 16px; border-radius: 8px; font-weight: 800; font-size: 0.9rem; margin-bottom: 14px; letter-spacing: 0.5px;}
-.order-buy {background: var(--buy-bg); color: var(--buy-text); border: 2px solid var(--buy-border);}
-.order-sell {background: var(--sell-bg); color: var(--sell-text); border: 2px solid var(--sell-border);}
-
-.argument-box {background: #f8fafc; padding: 12px; border-radius: 8px; border-left: 3px solid var(--primary); margin-bottom: 15px;}
-.argument-title {font-size: 0.75rem; text-transform: uppercase; font-weight: 800; color: var(--primary); margin-bottom: 4px;}
-.insight {font-size: 0.85rem; color: #334155; line-height: 1.5;}
-
-/* Precios Objetivo TP / SL */
-.trade-params {display: flex; gap: 10px;}
-.param-box {flex: 1; padding: 12px 10px; border-radius: 10px; text-align: center;}
-.param-title {font-size: 0.7rem; font-weight: 800; text-transform: uppercase;}
-.param-price {font-size: 1.2rem; font-weight: 800; margin-top: 4px;}
-.param-tp {background: #f0fdf4; color: #15803d; border: 1px solid #86efac;}
-.param-sl {background: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5;}
-
-/* Formularios y Ajustes */
-.pro-card {margin: 15px 20px; background: linear-gradient(135deg, #111827, #1f2937); color: white; padding: 24px; border-radius: 16px; text-align: center; position: relative; overflow: hidden;}
-.pro-card h3 {margin: 0 0 8px; font-size: 1.2rem; color: var(--accent);}
-.pro-card p {font-size: 0.85rem; opacity: 0.85; margin: 0 0 20px; line-height: 1.5;}
-.btn-upgrade {background: var(--accent); color: #000; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 800; font-size: 0.9rem; width: 100%; cursor: pointer;}
-
-/* Navegación Inferior (Diseño Activo Resaltado) */
-.bottom-nav {flex-shrink: 0; background: var(--bg-card); display: flex; justify-content: space-around; padding: 10px 5px 20px; border-top: 1px solid var(--border); z-index: 20;}
-.nav-item {display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-sec); font-size: 0.7rem; font-weight: 700; cursor: pointer; width: 23%; background: transparent; border: none; padding: 10px 0; border-radius: 12px; transition: all 0.2s;}
-/* Acá se destaca la pestaña activa con relieve y color oscuro */
-.nav-item.active {color: #ffffff; background: var(--primary); transform: translateY(-4px); box-shadow: 0 6px 12px rgba(15, 61, 38, 0.3);}
-.nav-item.active .nav-icon {color: var(--accent);}
-.nav-icon {font-size: 1.4rem;}
-
-</style>
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div class="app-container">
 
-  <div class="header">
-    <img class="logo" alt="AuraTrade Logo" src="data:image/webp;base64,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">
-    <div class="status-badge" id="data-status">Modo: API Real-Time</div>
-  </div>
+  <header class="header">
+    <img class="logo" alt="AuraTrade" src="logo.webp">
+    <div class="status-badge connecting" id="data-status" role="status">Conectando…</div>
+  </header>
 
-  <!-- VISTA 1: ALERTAS (Feed Transaccional) -->
-  <div id="tab-alertas" class="tab-content active">
-    <div class="section-title" style="margin-top:20px;">Órdenes del Motor Algorítmico</div>
-
-    <div class="feed">
-      
-      <!-- Alerta de Compra (AAPL) -->
-      <div class="alert-card">
-        <div class="card-header">
-          <div class="ticker">AAPL - Apple Inc.</div>
-          <div class="time">Hace 12 min</div>
-        </div>
-        <div class="order-badge order-buy">🟢 ORDEN DE COMPRA</div>
-        
-        <div class="argument-box">
-          <div class="argument-title">Análisis Fundamental</div>
-          <div class="insight">Aumento del 12% YoY en Beneficio por Acción (BPA) tras el último reporte trimestral de ganancias.</div>
-        </div>
-        <div class="argument-box">
-          <div class="argument-title">Análisis Técnico</div>
-          <div class="insight">Ruptura (Breakout) de la resistencia histórica en gráfico diario con RSI indicando fuerza alcista (58.4).</div>
-        </div>
-
-        <div class="trade-params">
-          <div class="param-box param-tp">
-            <div class="param-title">Take Profit</div>
-            <div class="param-price">$195.50</div>
-          </div>
-          <div class="param-box param-sl">
-            <div class="param-title">Stop Loss</div>
-            <div class="param-price">$168.00</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Alerta de Venta (TSLA) -->
-      <div class="alert-card">
-        <div class="card-header">
-          <div class="ticker">TSLA - Tesla Inc.</div>
-          <div class="time">Hoy 09:15</div>
-        </div>
-        <div class="order-badge order-sell">🔴 ORDEN DE VENTA</div>
-        
-        <div class="argument-box" style="border-left-color: var(--sell-border);">
-          <div class="argument-title" style="color: var(--sell-border);">Análisis Fundamental</div>
-          <div class="insight">Contracción severa de márgenes operativos (cayó al 8.2%) revelada en balance trimestral.</div>
-        </div>
-        <div class="argument-box" style="border-left-color: var(--sell-border);">
-          <div class="argument-title" style="color: var(--sell-border);">Análisis Técnico</div>
-          <div class="insight">Cruce bajista del indicador MACD y pérdida del soporte clave de los $180.00 con alto volumen.</div>
-        </div>
-
-        <div class="trade-params">
-          <div class="param-box param-tp" style="background:#fef2f2; color:#b91c1c; border-color:#fca5a5;">
-            <div class="param-title">Take Profit (Corto)</div>
-            <div class="param-price">$145.00</div>
-          </div>
-          <div class="param-box param-sl" style="background:#f0fdf4; color:#15803d; border-color:#86efac;">
-            <div class="param-title">Stop Loss</div>
-            <div class="param-price">$185.50</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Alerta de Compra (BTC) -->
-      <div class="alert-card">
-        <div class="card-header">
-          <div class="ticker">BTC - Bitcoin</div>
-          <div class="time">Ayer 18:30</div>
-        </div>
-        <div class="order-badge order-buy">🟢 ORDEN DE COMPRA</div>
-        
-        <div class="argument-box">
-          <div class="argument-title">Análisis On-Chain (Cripto)</div>
-          <div class="insight">Ingreso masivo y sostenido de capital institucional en los fondos ETF spot (+$400M en 24hs).</div>
-        </div>
-        <div class="argument-box">
-          <div class="argument-title">Análisis Técnico</div>
-          <div class="insight">Rebote confirmado en zona de soporte histórico (USD 60,500) con divergencia alcista en gráfico 4H.</div>
-        </div>
-
-        <div class="trade-params">
-          <div class="param-box param-tp">
-            <div class="param-title">Take Profit</div>
-            <div class="param-price">$68,500</div>
-          </div>
-          <div class="param-box param-sl">
-            <div class="param-title">Stop Loss</div>
-            <div class="param-price">$59,800</div>
-          </div>
-        </div>
-      </div>
-
+  <!-- VISTA 1: ALERTAS -->
+  <main id="tab-alertas" class="tab-content active">
+    <div class="section-title">Alertas del motor de reglas</div>
+    <div class="filter-chips" role="group" aria-label="Filtrar alertas">
+      <button class="filter-chip active" data-filter="all">Todas</button>
+      <button class="filter-chip" data-filter="watch">Mi cartera</button>
     </div>
-  </div>
+    <div class="feed-meta" id="alerts-meta">Analizando velas de 1 hora…</div>
+    <div class="feed" id="alerts-feed"></div>
+    <p class="disclaimer">AuraTrade emite alertas informativas generadas por reglas técnicas sobre datos públicos. No son recomendaciones de compra o venta ni constituyen asesoramiento financiero.</p>
+  </main>
 
-  <!-- VISTA 2: MERCADO (Buscador y Activos Top) -->
-  <div id="tab-mercado" class="tab-content">
+  <!-- VISTA 2: MERCADOS -->
+  <section id="tab-mercado" class="tab-content">
     <div class="search-container">
-      <input type="text" class="search-bar" placeholder="🔍 Buscar empresa o ticker (ej. AMZN, SOL)...">
-    </div>
-    
-    <div class="market-toggle">
-      <div class="toggle-btn active" id="btn-toggle-stocks" onclick="toggleMarket('stocks')">Wall Street</div>
-      <div class="toggle-btn" id="btn-toggle-crypto" onclick="toggleMarket('crypto')">Criptoactivos</div>
-    </div>
-    
-    <!-- ACCIONES -->
-    <div id="list-stocks" class="asset-list">
-      
-      <!-- Se agregan acciones principales -->
-      <div class="asset-card">
-        <div class="asset-left">
-          <div class="asset-icon icon-stock" style="background:#e0f2fe; color:#0369a1;">SP</div>
-          <div><div class="asset-name">S&P 500 ETF</div><div class="asset-desc">SPY · Arca</div></div>
-        </div>
-        <div class="asset-right"><div class="asset-price">$512.45</div><div class="asset-change up">▲ 0.40%</div></div>
-      </div>
-
-      <div class="asset-card">
-        <div class="asset-left">
-          <div class="asset-icon icon-stock" style="background:#dcfce7; color:#166534;">QQ</div>
-          <div><div class="asset-name">Nasdaq 100 ETF</div><div class="asset-desc">QQQ · Nasdaq</div></div>
-        </div>
-        <div class="asset-right"><div class="asset-price">$440.10</div><div class="asset-change up">▲ 0.85%</div></div>
-      </div>
-
-      <div class="asset-card">
-        <div class="asset-left">
-          <div class="asset-icon icon-stock">AP</div>
-          <div><div class="asset-name">Apple Inc.</div><div class="asset-desc">AAPL · Nasdaq</div></div>
-        </div>
-        <div class="asset-right"><div class="asset-price">$178.50</div><div class="asset-change up">▲ 1.20%</div></div>
-      </div>
-
-      <div class="asset-card">
-        <div class="asset-left">
-          <div class="asset-icon icon-stock">MS</div>
-          <div><div class="asset-name">Microsoft Corp.</div><div class="asset-desc">MSFT · Nasdaq</div></div>
-        </div>
-        <div class="asset-right"><div class="asset-price">$415.50</div><div class="asset-change down">▼ 0.25%</div></div>
-      </div>
-
-      <div class="asset-card">
-        <div class="asset-left">
-          <div class="asset-icon icon-stock" style="background:#dcfce7; color:#166534;">NV</div>
-          <div><div class="asset-name">NVIDIA Corp.</div><div class="asset-desc">NVDA · Nasdaq</div></div>
-        </div>
-        <div class="asset-right"><div class="asset-price">$884.50</div><div class="asset-change up">▲ 3.15%</div></div>
-      </div>
-
-      <div class="asset-card">
-        <div class="asset-left">
-          <div class="asset-icon icon-stock" style="background:#fff7ed; color:#ea580c;">AM</div>
-          <div><div class="asset-name">Amazon.com</div><div class="asset-desc">AMZN · Nasdaq</div></div>
-        </div>
-        <div class="asset-right"><div class="asset-price">$185.20</div><div class="asset-change up">▲ 1.05%</div></div>
-      </div>
-      
-      <div class="asset-card">
-        <div class="asset-left">
-          <div class="asset-icon icon-stock" style="background:#fee2e2; color:#b91c1c;">TS</div>
-          <div><div class="asset-name">Tesla Inc.</div><div class="asset-desc">TSLA · Nasdaq</div></div>
-        </div>
-        <div class="asset-right"><div class="asset-price">$178.25</div><div class="asset-change down">▼ 2.10%</div></div>
-      </div>
-
-      <div class="asset-card">
-        <div class="asset-left">
-          <div class="asset-icon icon-stock" style="background:#fef08a; color:#a16207;">ML</div>
-          <div><div class="asset-name">MercadoLibre</div><div class="asset-desc">MELI · Nasdaq</div></div>
-        </div>
-        <div class="asset-right"><div class="asset-price">$1,532.10</div><div class="asset-change down">▼ 0.85%</div></div>
-      </div>
+      <input type="search" id="search" class="search-bar" placeholder="Buscar activo o ticker (ej. SOL, PEPE)" autocomplete="off">
+      <div id="search-suggestion" class="search-suggestion" hidden></div>
     </div>
 
-    <!-- CRIPTO (Conectado a Binance API) -->
-    <div id="list-crypto" class="asset-list" style="display:none;">
-      
-      <div class="asset-card">
-        <div class="asset-left">
-          <div class="asset-icon icon-crypto" style="background:#fef08a; color:#854d0e;">₿</div>
-          <div><div class="asset-name">Bitcoin</div><div class="asset-desc">BTC/USDT</div></div>
-        </div>
-        <div class="asset-right">
-          <div class="asset-price" id="price-BTCUSDT">Cargando...</div>
-          <div class="asset-change up">LIVE ⚡</div>
-        </div>
-      </div>
-
-      <div class="asset-card">
-        <div class="asset-left">
-          <div class="asset-icon icon-crypto" style="background:#e0e7ff; color:#3730a3;">♦</div>
-          <div><div class="asset-name">Ethereum</div><div class="asset-desc">ETH/USDT</div></div>
-        </div>
-        <div class="asset-right">
-          <div class="asset-price" id="price-ETHUSDT">Cargando...</div>
-          <div class="asset-change up">LIVE ⚡</div>
-        </div>
-      </div>
-
-      <div class="asset-card">
-        <div class="asset-left">
-          <div class="asset-icon icon-crypto" style="background:#dcfce7; color:#166534;">S</div>
-          <div><div class="asset-name">Solana</div><div class="asset-desc">SOL/USDT</div></div>
-        </div>
-        <div class="asset-right">
-          <div class="asset-price" id="price-SOLUSDT">Cargando...</div>
-          <div class="asset-change up">LIVE ⚡</div>
-        </div>
-      </div>
-
-      <div class="asset-card">
-        <div class="asset-left">
-          <div class="asset-icon icon-crypto" style="background:#fef08a; color:#ca8a04;">B</div>
-          <div><div class="asset-name">BNB</div><div class="asset-desc">BNB/USDT</div></div>
-        </div>
-        <div class="asset-right">
-          <div class="asset-price" id="price-BNBUSDT">Cargando...</div>
-          <div class="asset-change up">LIVE ⚡</div>
-        </div>
-      </div>
-      
-      <div class="asset-card">
-        <div class="asset-left">
-          <div class="asset-icon icon-crypto" style="background:#f3f4f6; color:#1f2937;">X</div>
-          <div><div class="asset-name">XRP</div><div class="asset-desc">XRP/USDT</div></div>
-        </div>
-        <div class="asset-right">
-          <div class="asset-price" id="price-XRPUSDT">Cargando...</div>
-          <div class="asset-change up">LIVE ⚡</div>
-        </div>
-      </div>
-
-      <div class="asset-card">
-        <div class="asset-left">
-          <div class="asset-icon icon-crypto" style="background:#e0e7ff; color:#4338ca;">A</div>
-          <div><div class="asset-name">Cardano</div><div class="asset-desc">ADA/USDT</div></div>
-        </div>
-        <div class="asset-right">
-          <div class="asset-price" id="price-ADAUSDT">Cargando...</div>
-          <div class="asset-change up">LIVE ⚡</div>
-        </div>
-      </div>
-
-      <div class="asset-card">
-        <div class="asset-left">
-          <div class="asset-icon icon-crypto" style="background:#fee2e2; color:#b91c1c;">A</div>
-          <div><div class="asset-name">Avalanche</div><div class="asset-desc">AVAX/USDT</div></div>
-        </div>
-        <div class="asset-right">
-          <div class="asset-price" id="price-AVAXUSDT">Cargando...</div>
-          <div class="asset-change up">LIVE ⚡</div>
-        </div>
-      </div>
-
-      <div class="asset-card">
-        <div class="asset-left">
-          <div class="asset-icon icon-crypto" style="background:#fef08a; color:#a16207;">D</div>
-          <div><div class="asset-name">Dogecoin</div><div class="asset-desc">DOGE/USDT</div></div>
-        </div>
-        <div class="asset-right">
-          <div class="asset-price" id="price-DOGEUSDT">Cargando...</div>
-          <div class="asset-change up">LIVE ⚡</div>
-        </div>
-      </div>
-
+    <div class="market-toggle" role="tablist">
+      <button class="toggle-btn" data-market="stocks" role="tab">Wall Street</button>
+      <button class="toggle-btn active" data-market="crypto" role="tab">Criptoactivos</button>
     </div>
-  </div>
+
+    <div id="list-stocks" class="asset-list" hidden>
+      <div id="stock-notice" class="notice" hidden></div>
+      <div id="stock-cards"></div>
+    </div>
+    <div id="list-crypto" class="asset-list"></div>
+  </section>
 
   <!-- VISTA 3: CARTERA -->
-  <div id="tab-cartera" class="tab-content">
-    <div class="section-title" style="margin-top:20px;">Mi Watchlist Algorítmica</div>
-    <div style="padding: 0 20px; text-align:center; color:var(--text-sec); margin-top:50px;">
-      <div style="font-size:3.5rem; margin-bottom:15px; opacity:0.8;">🎛️</div>
-      <h3 style="color:var(--text-main); font-size:1.15rem; margin-bottom:8px;">Sin activos en seguimiento</h3>
-      <p style="font-size:0.85rem; line-height:1.6; max-width:280px; margin:0 auto;">Agregá acciones o criptos para que AuraTrade cruce su data técnica y fundamental 24/7 por vos.</p>
-    </div>
-  </div>
+  <section id="tab-cartera" class="tab-content">
+    <div class="section-title">Mi cartera</div>
+    <div id="watch-list" class="asset-list"></div>
+  </section>
 
   <!-- VISTA 4: AJUSTES -->
-  <div id="tab-ajustes" class="tab-content">
-    <div class="section-title" style="margin-top:20px;">Cuenta de Usuario</div>
-    
-    <div class="pro-card" id="plan-card">
-      <h3>Plan Pro (Conectado)</h3>
-      <p>Data obtenida vía API institucional sin latencia. Motor algorítmico trabajando 24/7.</p>
-      <button class="btn-upgrade" style="background:transparent; color:#fff; border:1px solid rgba(255,255,255,0.3);">Desconectar API</button>
-    </div>
-  </div>
+  <section id="tab-ajustes" class="tab-content">
+    <div class="section-title">Fuentes y método</div>
+    <div id="settings"></div>
+  </section>
 
-  <!-- Menú de Navegación Fijo Abajo -->
-  <div class="bottom-nav">
-    <button class="nav-item active" id="btn-alertas" onclick="switchTab('alertas')">
-      <span class="nav-icon">⚡</span><span>Alertas</span>
-    </button>
-    <button class="nav-item" id="btn-mercado" onclick="switchTab('mercado')">
-      <span class="nav-icon">📊</span><span>Mercados</span>
-    </button>
-    <button class="nav-item" id="btn-cartera" onclick="switchTab('cartera')">
-      <span class="nav-icon">🎛️</span><span>Cartera</span>
-    </button>
-    <button class="nav-item" id="btn-ajustes" onclick="switchTab('ajustes')">
-      <span class="nav-icon">⚙️</span><span>Ajustes</span>
-    </button>
-  </div>
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-tab="alertas"><span class="nav-icon">⚡</span><span>Alertas</span></button>
+    <button class="nav-item" data-tab="mercado"><span class="nav-icon">📊</span><span>Mercados</span></button>
+    <button class="nav-item" data-tab="cartera"><span class="nav-icon">⭐</span><span>Cartera</span></button>
+    <button class="nav-item" data-tab="ajustes"><span class="nav-icon">⚙️</span><span>Ajustes</span></button>
+  </nav>
 
 </div>
 
-<script>
-  function switchTab(tabId) {
-    // Esconder todas las vistas
-    const tabs = document.querySelectorAll('.tab-content');
-    tabs.forEach(tab => tab.classList.remove('active'));
-    
-    // Quitar estado activo de todos los botones
-    const navItems = document.querySelectorAll('.nav-item');
-    navItems.forEach(btn => btn.classList.remove('active'));
-    
-    // Activar seleccionado (Relieve Inconfundible)
-    document.getElementById('tab-' + tabId).classList.add('active');
-    document.getElementById('btn-' + tabId).classList.add('active');
-  }
-
-  function toggleMarket(marketType) {
-    document.getElementById('btn-toggle-stocks').classList.remove('active');
-    document.getElementById('btn-toggle-crypto').classList.remove('active');
-    document.getElementById('btn-toggle-' + marketType).classList.add('active');
-
-    if(marketType === 'stocks') {
-      document.getElementById('list-stocks').style.display = 'block';
-      document.getElementById('list-crypto').style.display = 'none';
-    } else {
-      document.getElementById('list-stocks').style.display = 'none';
-      document.getElementById('list-crypto').style.display = 'block';
-    }
-  }
-
-  // SCRIPT: Conexión Múltiple API Pública de Binance
-  let lastPrices = {};
-  const symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT', 'AVAXUSDT', 'DOGEUSDT'];
-  
-  async function fetchLiveCrypto() {
-    try {
-      const response = await fetch('https://api.binance.com/api/v3/ticker/price');
-      const data = await response.json();
-      
-      data.forEach(item => {
-        if(symbols.includes(item.symbol)) {
-          const currentPrice = parseFloat(item.price);
-          const priceElement = document.getElementById('price-' + item.symbol);
-          
-          if(priceElement) {
-            // Formatear precio (si es menor a $1 muestra más decimales)
-            if(currentPrice < 1) {
-                priceElement.innerText = currentPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 4 });
-            } else {
-                priceElement.innerText = currentPrice.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-            }
-
-            // Efecto Flash Verde/Rojo
-            const last = lastPrices[item.symbol] || 0;
-            if(currentPrice > last && last !== 0) {
-              priceElement.classList.add('flash-up');
-              setTimeout(() => priceElement.classList.remove('flash-up'), 500);
-            } else if (currentPrice < last && last !== 0) {
-              priceElement.classList.add('flash-down');
-              setTimeout(() => priceElement.classList.remove('flash-down'), 500);
-            }
-            lastPrices[item.symbol] = currentPrice;
-          }
-        }
-      });
-    } catch (error) {
-      console.log("Error API Binance");
-    }
-  }
-  
-  // Ejecutar al instante y luego cada 3 segundos
-  fetchLiveCrypto();
-  setInterval(fetchLiveCrypto, 3000);
-</script>
+<script src="js/config.js"></script>
+<script src="js/indicators.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
